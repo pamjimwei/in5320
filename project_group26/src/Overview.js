@@ -14,7 +14,7 @@ import {
 } from '@dhis2/ui'
 
 const dataQuery = {
-    dataSets: {
+    dataSets1: {
         resource: "/dataSets",
         params: {
           fields: "name, id,dataSetElements[dataElement[name,id,categoryCombo[name,id,categoryOptionCombos[name,id]]]",
@@ -32,20 +32,29 @@ const dataQuery = {
   }
   
 function mergeData(data) {
-    let mergedData = data.dataSets.dataSetElements.map( d => {
-        let matchedValue = data.dataValueSets.dataValues.filter( (dataValues) => {
-            return dataValues.dataElement === d.dataElement.id 
+    let mergedData = data.dataSets1.dataSets.map( d => {
+       let mergedData2 = d.dataSetElements.map(e => {
+            let matchedValue = data.dataValueSets.dataValues.find(dataValues => {
+                if (dataValues.dataElement == d.id) {
+                    return true
+                }
+            })
+            console.log("e : ", e)
+            return {
+                displayName: e.dataElement.name,
+                id: e.dataElement.id,
+                value: e.dataElement.id
+            }
+            
         })
+        console.log("Here it is2: ",mergedData2)
+        return mergedData2
         ///Consumption ID: J2Qf1jtZuj8
         // Quantity to be ordered ID:KPP63zJPkOu
         // Inventory (End Balance) ID: rQLFnNXXIL0
-        return {
-            Commodity: d.dataElement.name,
-            Consumption: d.dataElement.id,
-            Inventory: matchedValue.categoryCombo.categoryOptionCombo.id
-        }
+
     })
-    console.log("Here it is: ",mergedData)
+    console.log("Here it is1: ",mergedData)
     return mergedData
 }
 export function Overview() {
@@ -62,6 +71,7 @@ export function Overview() {
     if (data) {
         let mergedData = mergeData(data)
         console.log("After processing: ",mergedData)
+        let counter = 0
         return (
             <Table>
                 <TableHead>
@@ -73,11 +83,12 @@ export function Overview() {
                 </TableHead>
                 <TableBody>
                     {mergedData.map(row => {
+                        console.log("this is my row: ", row)
                         return (
-                            <TableRow key={row.id}>
-                                <TableCell>{row.displayName}</TableCell>
-                                <TableCell>{row.value}</TableCell>
-                                <TableCell>{row.id}</TableCell>
+                            <TableRow key={counter++}>
+                                <TableCell >{row.displayName}</TableCell>
+                                <TableCell >{row.id}</TableCell>
+                                <TableCell >{row.value}</TableCell>
                             </TableRow>
                         )
                     })}
