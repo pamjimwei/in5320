@@ -15,44 +15,42 @@ import {
 
 const dataQuery = {
     dataSets: {
-        resource: 'dataSets/aLpVgfXiz0f',
+        resource: "/dataSets",
         params: {
-            fields: [
-                'name',
-                'id',
-                'dataSetElements[dataElement[id, displayName]',
-            ],
-        },
-    },
+          fields: "name, id,dataSetElements[dataElement[name,id,categoryCombo[name,id,categoryOptionCombos[name,id]]]",
+          filter: "id:eq:ULowA8V3ucd"
+        }
+      },
     dataValueSets: {
-        resource: 'dataValueSets',
-        params: {
-            orgUnit: 'KiheEgvUZ0i',
-            dataSet: 'aLpVgfXiz0f',
-            period: '2020',
-        },
-    },
-}
-
+      resource: "/dataValueSets",
+      params: {
+        orgUnit: "uPshwz3B3Uu",
+        period: "202111",
+        dataSet: "ULowA8V3ucd"
+      }    
+    }
+  }
+  
 function mergeData(data) {
-    let mergedData = data.dataSets.dataSetElements.map(d => {
-        let matchedValue = data.dataValueSets.dataValues.find(dataValues => {
-            if (dataValues.dataElement == d.dataElement.id) {
-                return true
-            }
+    let mergedData = data.dataSets.dataSetElements.map( d => {
+        let matchedValue = data.dataValueSets.dataValues.filter( (dataValues) => {
+            return dataValues.dataElement === d.dataElement.id 
         })
-
+        ///Consumption ID: J2Qf1jtZuj8
+        // Quantity to be ordered ID:KPP63zJPkOu
+        // Inventory (End Balance) ID: rQLFnNXXIL0
         return {
-            displayName: d.dataElement.displayName,
-            id: d.dataElement.id,
-            value: matchedValue.value,
+            Commodity: d.dataElement.name,
+            Consumption: d.dataElement.id,
+            Inventory: matchedValue.categoryCombo.categoryOptionCombo.id
         }
     })
+    console.log("Here it is: ",mergedData)
     return mergedData
 }
-
 export function Overview() {
     const { loading, error, data } = useDataQuery(dataQuery)
+    console.log("Recieved Data: ", data)
     if (error) {
         return <span>ERROR: {error.message}</span>
     }
@@ -63,14 +61,14 @@ export function Overview() {
 
     if (data) {
         let mergedData = mergeData(data)
-        console.log(mergedData)
+        console.log("After processing: ",mergedData)
         return (
             <Table>
                 <TableHead>
                     <TableRowHead>
-                        <TableCellHead>Display Name</TableCellHead>
-                        <TableCellHead>Value</TableCellHead>
-                        <TableCellHead>ID</TableCellHead>
+                        <TableCellHead>Commodity</TableCellHead>
+                        <TableCellHead>Consumption</TableCellHead>
+                        <TableCellHead>Inventory</TableCellHead>
                     </TableRowHead>
                 </TableHead>
                 <TableBody>
