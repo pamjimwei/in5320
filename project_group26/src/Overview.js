@@ -30,25 +30,23 @@ const dataQuery = {
       }    
     }
   }
-  
+
 function mergeData(data) {
-    let mergedData = data.dataSets1.dataSets.map( d => {
-       let mergedData2 = d.dataSetElements.map(e => {
-            let matchedValue = data.dataValueSets.dataValues.find(dataValues => {
-                if (dataValues.dataElement == d.id) {
-                    return true
-                }
-            })
-            console.log("e : ", e)
-            return {
-                displayName: e.dataElement.name,
-                id: e.dataElement.id,
-                value: e.dataElement.id
-            }
-            
-        })
-        console.log("Here it is2: ",mergedData2)
-        return mergedData2
+    let dataValues = data.dataValueSets.dataValues.map(e => {
+        return {
+            co : e.categoryOptionCombo,
+            id: e.dataElement,
+            value: e.value
+        }
+    })
+    console.log("this is datavalues", dataValues)
+    let mergedData = data.dataSets1.dataSets[0].dataSetElements.map( d => {
+        console.log("this is d: ",d)
+        return {
+            displayName: d.dataElement.name,
+            consumption: d.dataElement.categoryCombo.categoryOptionCombos[0].id,
+            value: d.dataElement.id
+        }
         ///Consumption ID: J2Qf1jtZuj8
         // Quantity to be ordered ID:KPP63zJPkOu
         // Inventory (End Balance) ID: rQLFnNXXIL0
@@ -70,7 +68,6 @@ export function Overview() {
 
     if (data) {
         let mergedData = mergeData(data)
-        console.log("After processing: ",mergedData)
         let counter = 0
         return (
             <Table>
@@ -83,7 +80,6 @@ export function Overview() {
                 </TableHead>
                 <TableBody>
                     {mergedData.map(row => {
-                        console.log("this is my row: ", row)
                         return (
                             <TableRow key={counter++}>
                                 <TableCell >{row.displayName}</TableCell>
