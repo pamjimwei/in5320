@@ -14,25 +14,43 @@ import {
 } from '@dhis2/ui'
 
 const dataQuery = {
-    dataSets1: {
-        resource: "/dataSets",
-        params: {
-          fields: "name, id,dataSetElements[dataElement[name,id,categoryCombo[name,id,categoryOptionCombos[name,id]]]",
-          filter: "id:eq:ULowA8V3ucd"
-        }
+    "dataSets": {
+      "resource": "dataSets/ULowA8V3ucd",
+      "params": {
+        "fields": [
+          "name",
+          "id",
+          'dataSetElements[dataElement[name,id,dataElementGroups[name,id],categoryCombo[categoryOptionCombos[name,id]',
+          ],
       },
-    dataValueSets: {
-      resource: "/dataValueSets",
-      params: {
-        orgUnit: "uPshwz3B3Uu",
-        period: "202111",
-        dataSet: "ULowA8V3ucd"
-      }    
-    }
-  }
+    },
+    "dataValueSets": {
+      "resource": "dataValueSets",
+      "params": {
+        "orgUnit": "uPshwz3B3Uu",
+        "dataSet": "ULowA8V3ucd",
+        "period": "202110",
+      },
+    },
+  };
 
 function mergeData(data) {
-    let dataValues = data.dataValueSets.dataValues.map(e => {
+    return data.dataSets.dataSetElements.map(d=> {
+        const Mvalue = data.dataValueSets.dataValues.filter((dataValues)=> {
+        const dv = dataValues.categoryOptionCombo;
+      if (dv !== "HllvX50cXC0" && dv !== "KPP63zJPkOu"){
+        return dataValues.dataElement === d.dataElement.id;
+      }
+      return null;
+        });
+    return {
+      type: distinguishName(d.dataElement.dataElementGroups),
+      displayName: d.dataElement.name,
+      id: d.dataElement.id,
+      value: Mvalue,
+    };
+    });
+    /* let dataValues = data.dataValueSets.dataValues.map(e => {
         return {
             co : e.categoryOptionCombo,
             id: e.dataElement,
@@ -53,7 +71,7 @@ function mergeData(data) {
 
     })
     console.log("Here it is1: ",mergedData)
-    return mergedData
+    return mergedData */
 }
 export function Overview() {
     const { loading, error, data } = useDataQuery(dataQuery)
@@ -78,13 +96,13 @@ export function Overview() {
                         <TableCellHead>Inventory</TableCellHead>
                     </TableRowHead>
                 </TableHead>
-                <TableBody>
+                <TableBody key={counter++}>
                     {mergedData.map(row => {
                         return (
-                            <TableRow key={counter++}>
-                                <TableCell >{row.displayName}</TableCell>
-                                <TableCell >{row.id}</TableCell>
-                                <TableCell >{row.value}</TableCell>
+                            <TableRow key={row.id}>
+                                <TableCell >{row.displayName.split(" - ")[1]}</TableCell>
+                                <TableCell key={counter++}> {row.value[0].value} </TableCell>
+                                <TableCell key={counter++}> {row.value[1].value} </TableCell>
                             </TableRow>
                         )
                     })}
@@ -93,3 +111,9 @@ export function Overview() {
         )
     }
 }
+
+function distinguishName(data) {
+    const find = data.find(data => data.id !== "Svac1cNQhRS")
+    return find.name.split("Commodities ")[1]
+  }
+  
