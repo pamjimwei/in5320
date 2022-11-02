@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState } from "react";
 import { useDataQuery } from '@dhis2/app-runtime'
 import { CircularLoader } from '@dhis2/ui'
+import { InputField } from '@dhis2/ui'
 
 import {
     Table,
@@ -12,6 +13,8 @@ import {
     TableRow,
     TableRowHead,
 } from '@dhis2/ui'
+
+
 
 const dataQuery = {
     "dataSets": {
@@ -33,7 +36,8 @@ const dataQuery = {
       },
     },
   };
-
+  //({period}) => period
+console.log("Data query: ",dataQuery)
 function mergeData(data) {
     return data.dataSets.dataSetElements.map(d=> {
         const Mvalue = data.dataValueSets.dataValues.filter((dataValues)=> {
@@ -74,8 +78,10 @@ function mergeData(data) {
     return mergedData */
 }
 export function Overview() {
+    const [period, setPeriod] = useState('202110')
     const { loading, error, data } = useDataQuery(dataQuery)
     console.log("Recieved Data: ", data)
+    console.log("Recieved period: ", period)
     if (error) {
         return <span>ERROR: {error.message}</span>
     }
@@ -88,6 +94,15 @@ export function Overview() {
         let mergedData = mergeData(data)
         let counter = 0
         return (
+            <div>
+            <InputField
+                label="Select month to view"
+                type="date"
+                value={period}
+                max="2021-12-31"
+                min="2021-01-01"
+                onChange={({ value }) => setPeriod(getPeriod(value))}
+            />
             <Table>
                 <TableHead>
                     <TableRowHead>
@@ -108,6 +123,7 @@ export function Overview() {
                     })}
                 </TableBody>
             </Table>
+            </div>
         )
     }
 }
@@ -116,4 +132,10 @@ function distinguishName(data) {
     const find = data.find(data => data.id !== "Svac1cNQhRS")
     return find.name.split("Commodities ")[1]
   }
-  
+
+//Made this to get the period we want in a query
+function getPeriod(date){
+    //console.log("Input date",date)
+    //console.log("Modified date",date.split('-').join('').slice(0, -2))
+    return date.split('-').join('').slice(0, -2)
+}
