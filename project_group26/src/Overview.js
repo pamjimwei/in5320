@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDataQuery } from '@dhis2/app-runtime'
 import { CircularLoader } from '@dhis2/ui'
 import { InputField } from '@dhis2/ui'
@@ -82,6 +82,9 @@ export function Overview() {
     const { loading, error, data } = useDataQuery(dataQuery)
     console.log("Recieved Data: ", data)
     console.log("Recieved period: ", period)
+    useEffect(() => {
+        highlightLowInventory()
+       }, [data]); // <-- empty array means 'run once'
     if (error) {
         return <span>ERROR: {error.message}</span>
     }
@@ -105,7 +108,7 @@ export function Overview() {
             />
             <Table>
                 <TableHead>
-                    <TableRowHead>
+                    <TableRowHead >
                         <TableCellHead>Commodity</TableCellHead>
                         <TableCellHead>Consumption</TableCellHead>
                         <TableCellHead>Inventory</TableCellHead>
@@ -117,7 +120,7 @@ export function Overview() {
                             <TableRow key={row.id}>
                                 <TableCell >{row.displayName.split(" - ")[1]}</TableCell>
                                 <TableCell key={counter++}> {row.value[0].value} </TableCell>
-                                <TableCell key={counter++}> {row.value[1].value} </TableCell>
+                                <TableCell className="inventory" key={counter++}> {row.value[1].value} </TableCell>
                             </TableRow>
                         )
                     })}
@@ -126,6 +129,7 @@ export function Overview() {
             </div>
         )
     }
+
 }
 
 function distinguishName(data) {
@@ -133,9 +137,19 @@ function distinguishName(data) {
     return find.name.split("Commodities ")[1]
   }
 
-//Made this to get the period we want in a query
+  //Made this to get the period we want in a query
 function getPeriod(date){
     //console.log("Input date",date)
     //console.log("Modified date",date.split('-').join('').slice(0, -2))
     return date.split('-').join('').slice(0, -2)
-}
+    }
+
+function highlightLowInventory(){
+    const result = document.querySelectorAll('[class$=inventory]')
+    result.forEach(element => {
+        if(Number(element.innerHTML)< 10){
+            element.style.background = "red"
+        }
+    })
+    console.log(result)
+    }
