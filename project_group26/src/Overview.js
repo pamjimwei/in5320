@@ -4,14 +4,17 @@ import { CircularLoader } from '@dhis2/ui'
 import { InputField } from '@dhis2/ui'
 
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableCellHead,
-    TableFoot,
+    DataTable,
     TableHead,
-    TableRow,
-    TableRowHead,
+    DataTableRow,
+    DataTableColumnHeader,
+    TableBody,
+    DataTableCell,
+
+
+
+
+
 } from '@dhis2/ui'
 
 
@@ -98,39 +101,49 @@ export function Overview() {
         let counter = 0
         return (
             <div>
-            <InputField
-                label="Select month to view"
-                type="date"
-                value={period}
-                max="2021-12-31"
-                min="2021-01-01"
-                onChange={({ value }) => setPeriod(getPeriod(value))}
-            />
-            <Table>
+            <DataTable>
                 <TableHead>
-                    <TableRowHead >
-                        <TableCellHead>Commodity</TableCellHead>
-                        <TableCellHead>Consumption</TableCellHead>
-                        <TableCellHead>Inventory</TableCellHead>
-                    </TableRowHead>
+                    <DataTableRow >
+                        <DataTableColumnHeader
+                            name="Commodity" 
+                            sortDirection="desc"
+                            onSortIconClick={(e) =>console.log("this is the payload: ", e.direction, e.name) }
+                            sortIconTitle="Sort by Commodity">
+                            Commodity
+                        </DataTableColumnHeader>
+                        <DataTableColumnHeader
+                            name="Consumption" 
+                            sortDirection="desc"
+                            onSortIconClick={(e) =>console.log("this is the payload: ", e.direction, e.name) }
+                            sortIconTitle="Sort by Consumption">
+                            Consumption
+                        </DataTableColumnHeader>
+                        <DataTableColumnHeader
+                            name="Inventory" 
+                            sortDirection="desc"
+                            onSortIconClick={(e) =>console.log("this is the payload: ", e.direction, e.name) }
+                            sortIconTitle="Sort by Inventory">
+                            Inventory</DataTableColumnHeader>
+                    </DataTableRow>
                 </TableHead>
                 <TableBody key={counter++}>
                     {mergedData.map(row => {
                         return (
-                            <TableRow key={row.id}>
-                                <TableCell >{row.displayName.split(" - ")[1]}</TableCell>
-                                <TableCell key={counter++}> {row.value[0].value} </TableCell>
-                                <TableCell className="inventory" key={counter++}> {row.value[1].value} </TableCell>
-                            </TableRow>
+                            <DataTableRow key={row.id}>
+                                <DataTableCell  >{row.displayName.split(" - ")[1]}</DataTableCell >
+                                <DataTableCell  key={counter++}> {row.value[0].value} </DataTableCell >
+                                <DataTableCell  className="inventory" key={counter++}> {row.value[1].value} </DataTableCell >
+                            </DataTableRow>
                         )
                     })}
                 </TableBody>
-            </Table>
+            </DataTable>
             </div>
         )
     }
 
 }
+
 
 function distinguishName(data) {
     const find = data.find(data => data.id !== "Svac1cNQhRS")
@@ -144,6 +157,7 @@ function getPeriod(date){
     return date.split('-').join('').slice(0, -2)
     }
 
+    //Checks a threshold for inventory and assigns a colour based on the threshold
 function highlightLowInventory(){
     const result = document.querySelectorAll('[class$=inventory]')
     result.forEach(element => {
@@ -151,5 +165,4 @@ function highlightLowInventory(){
             element.style.background = "red"
         }
     })
-    console.log(result)
     }
