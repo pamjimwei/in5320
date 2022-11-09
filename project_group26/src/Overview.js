@@ -9,17 +9,10 @@ import {
     DataTableRow,
     DataTableColumnHeader,
     TableBody,
-    DataTableCell,
-
-
-
-
-
+    DataTableCell
 } from '@dhis2/ui'
 
-
-
-const dataQuery = {
+let dataQuery = {
     "dataSets": {
       "resource": "dataSets/ULowA8V3ucd",
       "params": {
@@ -32,15 +25,18 @@ const dataQuery = {
     },
     "dataValueSets": {
       "resource": "dataValueSets",
-      "params": {
+      "params": ({period}) => ({
         "orgUnit": "uPshwz3B3Uu",
         "dataSet": "ULowA8V3ucd",
-        "period": "202110",
-      },
+        "period": String(period).replace("-", ''),
+      }),
     },
   };
+
+
+
   //({period}) => period
-console.log("Data query: ",dataQuery)
+
 function mergeData(data) {
     return data.dataSets.dataSetElements.map(d=> {
         const Mvalue = data.dataValueSets.dataValues.filter((dataValues)=> {
@@ -57,32 +53,21 @@ function mergeData(data) {
       value: Mvalue,
     };
     });
-    /* let dataValues = data.dataValueSets.dataValues.map(e => {
-        return {
-            co : e.categoryOptionCombo,
-            id: e.dataElement,
-            value: e.value
-        }
-    })
-    console.log("this is datavalues", dataValues)
-    let mergedData = data.dataSets1.dataSets[0].dataSetElements.map( d => {
-        console.log("this is d: ",d)
-        return {
-            displayName: d.dataElement.name,
-            consumption: d.dataElement.categoryCombo.categoryOptionCombos[0].id,
-            value: d.dataElement.id
-        }
+
         ///Consumption ID: J2Qf1jtZuj8
         // Quantity to be ordered ID:KPP63zJPkOu
-        // Inventory (End Balance) ID: rQLFnNXXIL0
-
-    })
-    console.log("Here it is1: ",mergedData)
-    return mergedData */
+        // Inventory (End Balance) ID: rQLFnNXXIL
+    return mergedData
 }
 export function Overview() {
     const [period, setPeriod] = useState('202110')
-    const { loading, error, data } = useDataQuery(dataQuery)
+
+    const { loading, error, data, refetch} = useDataQuery(dataQuery, {
+        variables: {
+            period: period,
+        }
+    })
+    //const { isLoading, isError, data } = useQuery(dataQuery, () => fetch(`https://test.com?param=${param}`))
     console.log("Recieved Data: ", data)
     console.log("Recieved period: ", period)
     useEffect(() => {
@@ -101,6 +86,15 @@ export function Overview() {
         let counter = 0
         return (
             <div>
+            <InputField 
+            min="2021-01" 
+            max="2021-12" 
+            label="Period" 
+            value={period} 
+            type="month" 
+            name="Period" 
+            onChange={(e) => {setPeriod(e.value)
+            refetch({period: e.value})}} />
             <DataTable>
                 <TableHead>
                     <DataTableRow >
