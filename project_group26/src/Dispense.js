@@ -2,16 +2,14 @@ import React, { useState } from "react";
 import { useDataQuery } from '@dhis2/app-runtime'
 import { CircularLoader } from '@dhis2/ui'
 import { InputField } from '@dhis2/ui'
-
+import { Button, ButtonStrip} from '@dhis2-ui/button'
+import { DataTable, DataTableColumnHeader, DataTableRow, DataTableCell} from '@dhis2-ui/table'
+import { Modal, ModalContent, ModalActions} from '@dhis2-ui/modal'
 import {
-    Table,
     TableBody,
     TableCell,
-    TableCellHead,
     TableFoot,
     TableHead,
-    TableRow,
-    TableRowHead,
 } from '@dhis2/ui'
 
 
@@ -36,7 +34,7 @@ const dataQuery = {
       },
     },
   };
-  //({period}) => period
+
 console.log("Data query: ",dataQuery)
 function mergeData(data) {
     return data.dataSets.dataSetElements.map(d=> {
@@ -54,31 +52,10 @@ function mergeData(data) {
       value: Mvalue,
     };
     });
-    /* let dataValues = data.dataValueSets.dataValues.map(e => {
-        return {
-            co : e.categoryOptionCombo,
-            id: e.dataElement,
-            value: e.value
-        }
-    })
-    console.log("this is datavalues", dataValues)
-    let mergedData = data.dataSets1.dataSets[0].dataSetElements.map( d => {
-        console.log("this is d: ",d)
-        return {
-            displayName: d.dataElement.name,
-            consumption: d.dataElement.categoryCombo.categoryOptionCombos[0].id,
-            value: d.dataElement.id
-        }
-        ///Consumption ID: J2Qf1jtZuj8
-        // Quantity to be ordered ID:KPP63zJPkOu
-        // Inventory (End Balance) ID: rQLFnNXXIL0
-
-    })
-    console.log("Here it is1: ",mergedData)
-    return mergedData */
 }
 export function Dispense() {
     const { loading, error, data } = useDataQuery(dataQuery)
+    const [showModal, setShowModal] = useState(true)
     console.log("Recieved Data: ", data)
 
     if (error) {
@@ -94,45 +71,64 @@ export function Dispense() {
         let counter = 0
         return (
             <div>
-            <Table>
+            <DataTable>
                 <TableHead>
-                    <TableRowHead>
-                        <TableCellHead>Time</TableCellHead>
-                        <TableCellHead>Commodity</TableCellHead>
-                        <TableCellHead>Amount</TableCellHead>
-                        <TableCellHead>Dispensed by</TableCellHead>
-                        <TableCellHead>Dispensed to</TableCellHead>
-                    </TableRowHead>
+                    <DataTableRow>
+                        <DataTableColumnHeader>Commodity</DataTableColumnHeader>
+                        <DataTableColumnHeader>Amount</DataTableColumnHeader>
+                        <DataTableColumnHeader>Dispensed by</DataTableColumnHeader>
+                        <DataTableColumnHeader>Dispensed to</DataTableColumnHeader>
+                    </DataTableRow>
                 </TableHead>
                 <TableBody key={counter++}>
                     {mergedData.map(row => {
                         return (
-                            <TableRow key={row.id}>
-                                <TableCell key={counter++}>
-                                    <InputField
-                                    className="time"
-                                    type="time"
-                                    value=""
-                                    onChange={({ value }) => this.value}/>
-                                </TableCell>
-                                <TableCell >{row.displayName.split(" - ")[1]}</TableCell>
-                                <TableCell key={counter++}>
+                            <DataTableRow key={row.id}>
+                                <DataTableCell >{row.displayName.split(" - ")[1]}</DataTableCell>
+                                <DataTableCell key={counter++}>
                                     <InputField
                                     type="number" placeholder="Amount"/>
-                                </TableCell>
-                                <TableCell key={counter++}> 
+                                </DataTableCell>
+                                <DataTableCell key={counter++}> 
                                     <InputField
                                     type="input" placeholder="Dispensee"/>
-                                </TableCell>
-                                <TableCell key={counter++}> 
+                                </DataTableCell>
+                                <DataTableCell key={counter++}> 
                                     <InputField
                                     type="input" placeholder="Dispense to name"/>
-                                </TableCell>
-                            </TableRow>
+                                </DataTableCell>
+                            </DataTableRow>
                         )
                     })}
                 </TableBody>
-            </Table>
+                <TableFoot>
+                <DataTableRow>
+                    <DataTableCell colSpan="4">
+                    <Button name="Dispense button" onClick={(e) => {console.log("pressed dispense")
+                setShowModal(false)}} primary value="default">
+                        Dispense
+                    </Button>
+                    </DataTableCell>
+                </DataTableRow>
+                </TableFoot>
+            </DataTable>
+            <Modal hide={showModal} small>
+                <ModalContent>
+                    Verification box
+                </ModalContent>
+                <ModalActions>
+                    <ButtonStrip end>
+                        <Button onClick={(e)=> {console.log("pressed cancel")
+                        setShowModal(true)}} destructive>
+                                Cancel
+                        </Button>
+                        <Button onClick={(e) => {console.log("pressed confirm")
+                        setShowModal(true)}} primary>
+                            Confirm
+                        </Button>
+                    </ButtonStrip>
+                </ModalActions>
+            </Modal>
             </div>
         )
     }
