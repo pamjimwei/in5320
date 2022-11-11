@@ -12,7 +12,8 @@ import {
     DataTableCell
 } from '@dhis2/ui'
 
-let dataQuery = {
+
+const dataQuery = {
     "dataSets": {
       "resource": "dataSets/ULowA8V3ucd",
       "params": {
@@ -31,6 +32,9 @@ let dataQuery = {
         "period": String(period).replace("-", ''),
       }),
     },
+    "profile": {
+        "resource": "/me"
+    }
   };
 
 
@@ -83,6 +87,7 @@ export function Overview() {
 
     if (data) {
         let mergedData = mergeData(data)
+        console.log(data.profile.name)
         let counter = 0
         return (
             <div>
