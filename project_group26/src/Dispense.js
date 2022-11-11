@@ -5,6 +5,7 @@ import { InputField } from '@dhis2/ui'
 import { Button, ButtonStrip} from '@dhis2-ui/button'
 import { DataTable, DataTableColumnHeader, DataTableRow, DataTableCell} from '@dhis2-ui/table'
 import { Modal, ModalContent, ModalActions} from '@dhis2-ui/modal'
+import { SingleSelectOption,  SingleSelect, SingleSelectField} from '@dhis2-ui/select'
 import {
     TableBody,
     TableCell,
@@ -33,6 +34,19 @@ const dataQuery = {
         "period": "202110",
       },
     },
+    "localUsers": {
+        "resource": "/users",
+        "params": {
+            "paging": "false",
+            "userOrgUnits": true
+        }
+    },
+    "allUsers": {
+        "resource": "/users",
+        "params": {
+            "paging": "false",
+        }
+    }      
   };
 
 console.log("Data query: ",dataQuery)
@@ -56,6 +70,9 @@ function mergeData(data) {
 export function Dispense() {
     const { loading, error, data } = useDataQuery(dataQuery)
     const [showModal, setShowModal] = useState(true)
+    const [dispenser, setDispenser] = useState('')
+    const [recipient, setRecipient] = useState('')
+    const [commodity, setCommodity] = useState('')
     console.log("Recieved Data: ", data)
 
     if (error) {
@@ -69,15 +86,70 @@ export function Dispense() {
     if (data) {
         let mergedData = mergeData(data)
         let counter = 0
+        console.log(mergedData)
         return (
             <div>
+                <h1>Please choose who is Dispensing</h1>
+                <SingleSelectField type="text" filterable 
+                selected={dispenser} key={counter++} 
+                value={dispenser} 
+                onChange={e => setDispenser(e.selected)} 
+                placeholder="Select Dispensee" 
+                className="Dispensee"
+                noMatchText="No user by that name">
+                {data.localUsers.users.map( users => {
+                    if(users.id != undefined && users.displayName !=undefined){
+                        return (
+                            <SingleSelectOption key={users.id} label={users.displayName} value={users.displayName}/>
+                            )
+                        }
+                    }
+                )}
+                </SingleSelectField>
+                <h1>Please choose the recipient</h1>
+                <SingleSelectField type="text" filterable 
+                selected={recipient} key={counter++} 
+                value={recipient} 
+                onChange={e => setRecipient(e.selected)} 
+                placeholder="Select recipient" 
+                className="Recipient"
+                noMatchText="No user by that name">
+                {data.allUsers.users.map( users => {
+                    if(users.id != undefined && users.displayName !=undefined){
+                        return (
+                            <SingleSelectOption key={users.id} label={users.displayName} value={users.displayName}/>
+                            )
+                        }
+                    }
+                )}
+            </SingleSelectField>
+            <h1>Choose commodity here</h1>
+            <div>
+            <SingleSelectField type="text" filterable 
+                selected={commodity} key={counter++} 
+                value={commodity} 
+                onChange={e => setCommodity(e.selected)} 
+                placeholder="Select Commodity" 
+                className="Commodity"
+                noMatchText="No commodity by that name">
+                {mergedData.map( commodity => {
+                        return (
+                            <SingleSelectOption key={commodity.id} label={String(commodity.displayName.split(" - ")[1])} value={String(commodity.displayName.split(" - ")[1])}/>
+                            )
+                        }
+                )}
+            </SingleSelectField>
+            <InputField type="number" placeholder="Amount"/>
+            <Button onClick={(e) => {console.log("pressed confirm")
+                        setShowModal(true)}} primary>
+                            Add
+                        </Button>
+            </div>
             <DataTable>
                 <TableHead>
                     <DataTableRow>
                         <DataTableColumnHeader>Commodity</DataTableColumnHeader>
                         <DataTableColumnHeader>Amount</DataTableColumnHeader>
-                        <DataTableColumnHeader>Dispensed by</DataTableColumnHeader>
-                        <DataTableColumnHeader>Dispensed to</DataTableColumnHeader>
                     </DataTableRow>
                 </TableHead>
                 <TableBody key={counter++}>
@@ -90,12 +162,10 @@ export function Dispense() {
                                     type="number" placeholder="Amount"/>
                                 </DataTableCell>
                                 <DataTableCell key={counter++}> 
-                                    <InputField
-                                    type="input" placeholder="Dispensee"/>
-                                </DataTableCell>
-                                <DataTableCell key={counter++}> 
-                                    <InputField
-                                    type="input" placeholder="Dispense to name"/>
+                                <Button onClick={(e) => {console.log("pressed confirm")
+                                    setShowModal(true)}} destructive>
+                                    Remove
+                                </Button>
                                 </DataTableCell>
                             </DataTableRow>
                         )
