@@ -73,6 +73,9 @@ export function Dispense() {
     const [dispenser, setDispenser] = useState('')
     const [recipient, setRecipient] = useState('')
     const [commodity, setCommodity] = useState('')
+    const [amount, setAmount] = useState()
+    const [addeTable, setAddedTable] = useState([])
+
     console.log("Recieved Data: ", data)
 
     if (error) {
@@ -139,9 +142,16 @@ export function Dispense() {
                         }
                 )}
             </SingleSelectField>
-            <InputField type="number" placeholder="Amount"/>
+            <InputField type="number" value={amount} onChange={(e => setAmount(e.value) )} placeholder="Amount"/>
             <Button onClick={(e) => {console.log("pressed confirm")
-                        setShowModal(true)}} primary>
+                        setAddedTable(current => [...current, {
+                            recipient: recipient,
+                            dispenser: dispenser,
+                            amount: amount,
+                            commodity: commodity
+                            }])
+                            console.log(addeTable)    
+                        }} primary>
                             Add
                         </Button>
             </div>
@@ -153,17 +163,15 @@ export function Dispense() {
                     </DataTableRow>
                 </TableHead>
                 <TableBody key={counter++}>
-                    {mergedData.map(row => {
+                    {addeTable.map((row, index) => {
                         return (
-                            <DataTableRow key={row.id}>
-                                <DataTableCell >{row.displayName.split(" - ")[1]}</DataTableCell>
+                            <DataTableRow key={index}>
+                                <DataTableCell >{row.commodity}</DataTableCell>
                                 <DataTableCell key={counter++}>
-                                    <InputField
-                                    type="number" placeholder="Amount"/>
+                                {row.amount}
                                 </DataTableCell>
                                 <DataTableCell key={counter++}> 
-                                <Button onClick={(e) => {console.log("pressed confirm")
-                                    setShowModal(true)}} destructive>
+                                <Button onClick={(e) => console.log(index)} destructive>
                                     Remove
                                 </Button>
                                 </DataTableCell>
@@ -208,7 +216,10 @@ function distinguishName(data) {
     const find = data.find(data => data.id !== "Svac1cNQhRS")
     return find.name.split("Commodities ")[1]
   }
-
+function deleteRow(index, oldArray){
+    let newArray = oldArray.splice(index, 1)
+    return newArray
+}
 //Made this to get the period we want in a query
 function getPeriod(date){
     //console.log("Input date",date)
