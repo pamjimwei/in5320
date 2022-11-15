@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useDataQuery } from '@dhis2/app-runtime'
+import React, { useState, useEffect } from "react";
+import { useDataQuery, useDataMutation } from '@dhis2/app-runtime'
 import { CircularLoader } from '@dhis2/ui'
 import { InputField } from '@dhis2/ui'
 import { Button, ButtonStrip} from '@dhis2-ui/button'
@@ -48,8 +48,18 @@ const dataQuery = {
         }
     }      
   };
+  function fetchDispenseMutationQuery() {
+    return {
+      resource: "dataValueSets",
+      type: "create",
+      dataSet: "ULowA8V3ucd",
+      data: ({ dispenseMutation }) => ({
+        dataValues: dispenseMutation,
+      }),
+    };
+  }
 
-console.log("Data query: ",dataQuery)
+//console.log("Data query: ",dataQuery)
 function mergeData(data) {
     return data.dataSets.dataSetElements.map(d=> {
         const Mvalue = data.dataValueSets.dataValues.filter((dataValues)=> {
@@ -67,16 +77,21 @@ function mergeData(data) {
     };
     });
 }
+const mutationAray = [];
 export function Dispense() {
+    const [mutate, { mutateLoading, mutateError }] = useDataMutation(
+        fetchDispenseMutationQuery()
+    );
     const { loading, error, data } = useDataQuery(dataQuery)
     const [showModal, setShowModal] = useState(true)
     const [dispenser, setDispenser] = useState('')
     const [recipient, setRecipient] = useState('')
     const [commodity, setCommodity] = useState('')
+    const [commodityID, setCommodityID] = useState('')    
     const [amount, setAmount] = useState()
     const [addeTable, setAddedTable] = useState([])
 
-    console.log("Recieved Data: ", data)
+    //console.log("Recieved Data: ", data)
 
     if (error) {
         return <span>ERROR: {error.message}</span>
@@ -87,9 +102,10 @@ export function Dispense() {
     }
 
     if (data) {
+
         let mergedData = mergeData(data)
         let counter = 0
-        console.log(mergedData)
+        //console.log(mergedData)
         return (
             <div>
                 <h1>Please choose who is Dispensing</h1>
@@ -131,13 +147,15 @@ export function Dispense() {
             <SingleSelectField type="text" filterable 
                 selected={commodity} key={counter++} 
                 value={commodity} 
-                onChange={e => setCommodity(e.selected)} 
+                onChange={e => {setCommodity(e.selected)}} 
                 placeholder="Select Commodity" 
                 className="Commodity"
                 noMatchText="No commodity by that name">
                 {mergedData.map( commodity => {
+                    //console.log(commodity)
                         return (
-                            <SingleSelectOption key={commodity.id} label={String(commodity.displayName.split(" - ")[1])} value={String(commodity.displayName.split(" - ")[1])}/>
+                            <SingleSelectOption key={commodity.id} label={String(commodity.displayName.split(" - ")[1])} 
+                            value={String(commodity.id)}/>
                             )
                         }
                 )}
@@ -148,9 +166,17 @@ export function Dispense() {
                             recipient: recipient,
                             dispenser: dispenser,
                             amount: amount,
-                            commodity: commodity
+                            commodity: commodity,
+                            commodityID: commodityID
                             }])
-                            console.log(addeTable)    
+                            mutationAray.push({
+                                categoryOptionCombo: "J2Qf1jtZuj8",
+                                dataElement: commodity,
+                                period: "202110",
+                                orgUnit: "uPshwz3B3Uu",
+                                value: amount,
+                            })
+                            console.log("mutationArray: ",mutationAray)   
                         }} primary>
                             Add
                         </Button>
@@ -182,8 +208,16 @@ export function Dispense() {
                 <TableFoot>
                 <DataTableRow>
                     <DataTableCell colSpan="4">
-                    <Button name="Dispense button" onClick={(e) => {console.log("pressed dispense")
-                setShowModal(false)}} primary value="default">
+                    <Button name="Dispense button" onClick={(e) => {console.log("mutationArray 2: ",mutationAray)
+               mutate({
+                mutationAray: mutationAray,
+            }).then(function (response) {
+                    if (response.status !== "SUCCESS") {
+
+                        console.log("this should not happen: ",response);
+                    }
+                })
+               }} primary value="default">
                         Dispense
                     </Button>
                     </DataTableCell>
@@ -219,6 +253,10 @@ function distinguishName(data) {
 function deleteRow(index, oldArray){
     let newArray = oldArray.splice(index, 1)
     return newArray
+}
+
+function sendToDataStore(data) {
+   
 }
 //Made this to get the period we want in a query
 function getPeriod(date){
