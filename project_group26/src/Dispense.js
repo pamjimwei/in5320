@@ -48,7 +48,7 @@ const dataQuery = {
         }
     }      
   };
-  function fetchDispenseMutationQuery() {
+  function postDispenseMutationQuery() {
     return {
       resource: "dataValueSets",
       type: "create",
@@ -77,11 +77,12 @@ function mergeData(data) {
     };
     });
 }
-const mutationAray = [];
+
 export function Dispense() {
     const [mutate, { mutateLoading, mutateError }] = useDataMutation(
-        fetchDispenseMutationQuery()
+        postDispenseMutationQuery()
     );
+    const [mutationArray, setMutationArray] = useState([])
     const { loading, error, data } = useDataQuery(dataQuery)
     const [showModal, setShowModal] = useState(true)
     const [dispenser, setDispenser] = useState('')
@@ -169,14 +170,14 @@ export function Dispense() {
                             commodity: commodity,
                             commodityID: commodityID
                             }])
-                            mutationAray.push({
+                            setMutationArray([...mutationArray,{
                                 categoryOptionCombo: "J2Qf1jtZuj8",
                                 dataElement: commodity,
                                 period: "202110",
                                 orgUnit: "uPshwz3B3Uu",
                                 value: amount,
-                            })
-                            console.log("mutationArray: ",mutationAray)   
+                            }])
+                            console.log("mutationArray: ",mutationArray)  
                         }} primary>
                             Add
                         </Button>
@@ -208,11 +209,12 @@ export function Dispense() {
                 <TableFoot>
                 <DataTableRow>
                     <DataTableCell colSpan="4">
-                    <Button name="Dispense button" onClick={(e) => {console.log("mutationArray 2: ",mutationAray)
+                    <Button name="Dispense button" onClick={(e) => {console.log("mutationArray 2: ",mutationArray)
                mutate({
-                mutationAray: mutationAray,
+                dispenseMutation: mutationArray,
             }).then(function (response) {
-                    if (response.status !== "SUCCESS") {
+                console.log("respones: ", response)
+                    if (response.response.status !== "SUCCESS") {
 
                         console.log("this should not happen: ",response);
                     }
