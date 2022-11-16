@@ -14,7 +14,6 @@ import {
 } from '@dhis2/ui'
 
 
-
 const dataQuery = {
     "dataSets": {
       "resource": "dataSets/ULowA8V3ucd",
@@ -79,21 +78,57 @@ function mergeData(data) {
 }
 
 export function Dispense() {
+    const { loading, error, data } = useDataQuery(dataQuery)
     const [mutate, { mutateLoading, mutateError }] = useDataMutation(
         postDispenseMutationQuery()
     );
+    const [disabledInput, setDisabledInput] = useState(false)
+    const [disabledAdd, setDisabledAdd] = useState(true)
     const [mutationArray, setMutationArray] = useState([])
-    const { loading, error, data } = useDataQuery(dataQuery)
-    const [showModal, setShowModal] = useState(true)
+    const [hideModal, setHideModal] = useState(true)
     const [dispenser, setDispenser] = useState('')
     const [recipient, setRecipient] = useState('')
     const [commodity, setCommodity] = useState('')
+    const [commodityName, setCommodityName] = useState('')
     const [commodityID, setCommodityID] = useState('')    
     const [amount, setAmount] = useState()
-    const [addeTable, setAddedTable] = useState([])
+    const [addedTable, setAddedTable] = useState([])
+    
+    function clearCommodities(){
+        setCommodity('')
+        setAmount()
+    }
+    function clearState(){
+        setAddedTable([])
+        setHideModal(true)
+        setRecipient('')
+        setCommodity('')
+        setAmount()
+        setMutationArray([])
+    }
+    function checkDisabledDispenser(){
+        if(addedTable.length > 0){
+            setDisabledInput(true)
+        }
+
+        else{
+            setDisabledInput(false)
+        }
+    }
+    function checkDisabledAdd(){
+        if(dispenser =='' || recipient =='' || commodity =='' || amount == null || amount == undefined || ){
+            setDisabledAdd(true)
+        }
+        else{
+            setDisabledAdd(false)
+        }
+    }
 
     //console.log("Recieved Data: ", data)
-
+    useEffect(() => {
+        checkDisabledDispenser()
+        checkDisabledAdd()
+       }, [addedTable, amount, commodity])
     if (error) {
         return <span>ERROR: {error.message}</span>
     }
@@ -106,11 +141,11 @@ export function Dispense() {
 
         let mergedData = mergeData(data)
         let counter = 0
-        //console.log(mergedData)
+        console.log(mergedData)
         return (
             <div>
-                <h1>Please choose who is Dispensing</h1>
-                <SingleSelectField type="text" filterable 
+                <h3>Dispenser</h3>
+                <SingleSelectField required disabled={disabledInput} initialFocus="true" inputWidth="300px" type="text" filterable 
                 selected={dispenser} key={counter++} 
                 value={dispenser} 
                 onChange={e => setDispenser(e.selected)} 
@@ -126,8 +161,8 @@ export function Dispense() {
                     }
                 )}
                 </SingleSelectField>
-                <h1>Please choose the recipient</h1>
-                <SingleSelectField type="text" filterable 
+                <h3>Recipient</h3>
+                <SingleSelectField required  disabled={disabledInput} inputWidth="300px" type="text" filterable 
                 selected={recipient} key={counter++} 
                 value={recipient} 
                 onChange={e => setRecipient(e.selected)} 
@@ -143,9 +178,8 @@ export function Dispense() {
                     }
                 )}
             </SingleSelectField>
-            <h1>Choose commodity here</h1>
-            <div>
-            <SingleSelectField type="text" filterable 
+            <h3>Choose Commodity to Dispense</h3>
+            <SingleSelectField  required  type="text" filterable 
                 selected={commodity} key={counter++} 
                 value={commodity} 
                 onChange={e => {setCommodity(e.selected)}} 
@@ -161,44 +195,50 @@ export function Dispense() {
                         }
                 )}
             </SingleSelectField>
-            <InputField type="number" value={amount} onChange={(e => setAmount(e.value) )} placeholder="Amount"/>
-            <Button onClick={(e) => {console.log("pressed confirm")
-                        setAddedTable(current => [...current, {
-                            recipient: recipient,
-                            dispenser: dispenser,
-                            amount: amount,
-                            commodity: commodity,
-                            commodityID: commodityID
-                            }])
-                            setMutationArray([...mutationArray,{
-                                categoryOptionCombo: "J2Qf1jtZuj8",
-                                dataElement: commodity,
-                                period: "202110",
-                                orgUnit: "uPshwz3B3Uu",
-                                value: amount,
-                            }])
-                            console.log("mutationArray: ",mutationArray)  
-                        }} primary>
-                            Add
-                        </Button>
-            </div>
+            <InputField required type="number" value={amount} onChange={(e => setAmount(e.value) )} placeholder="Amount"/>
+            <Button disabled={disabledAdd} onClick={(e) => {
+                console.log("pressed confirm")
+                setAddedTable(current => [...current, {
+                    recipient: recipient,
+                    dispenser: dispenser,
+                    amount: amount,
+                    commodity: commodity,
+                    commodityID: commodityID
+                    }])
+                setMutationArray([...mutationArray,{
+                    categoryOptionCombo: "J2Qf1jtZuj8",
+                    dataElement: commodity,
+                    period: "202110",
+                    orgUnit: "uPshwz3B3Uu",
+                    value: amount,
+                }])
+                clearCommodities()
+            }} primary>
+                Add
+            </Button>
+        {addedTable.length > 0 &&
             <DataTable>
                 <TableHead>
                     <DataTableRow>
                         <DataTableColumnHeader>Commodity</DataTableColumnHeader>
                         <DataTableColumnHeader>Amount</DataTableColumnHeader>
+                        <DataTableColumnHeader>Actions</DataTableColumnHeader>
                     </DataTableRow>
                 </TableHead>
                 <TableBody key={counter++}>
-                    {addeTable.map((row, index) => {
+                    {addedTable.map((row, index) => {
                         return (
                             <DataTableRow key={index}>
-                                <DataTableCell >{row.commodity}</DataTableCell>
+                                <DataTableCell >{getDisplayName(mergedData,row.commodity)}</DataTableCell>
                                 <DataTableCell key={counter++}>
                                 {row.amount}
                                 </DataTableCell>
                                 <DataTableCell key={counter++}> 
-                                <Button onClick={(e) => console.log(index)} destructive>
+                                <Button name="delete_button" value={index} onClick={(e) => {
+                                    console.log(addedTable) 
+                                    let arr = [...addedTable]
+                                    arr.splice(index, 1)
+                                    setAddedTable(arr)}} destructive>
                                     Remove
                                 </Button>
                                 </DataTableCell>
@@ -209,35 +249,55 @@ export function Dispense() {
                 <TableFoot>
                 <DataTableRow>
                     <DataTableCell colSpan="4">
-                    <Button name="Dispense button" onClick={(e) => {console.log("mutationArray 2: ",mutationArray)
-               mutate({
-                dispenseMutation: mutationArray,
-            }).then(function (response) {
-                console.log("respones: ", response)
-                    if (response.response.status !== "SUCCESS") {
-
-                        console.log("this should not happen: ",response);
-                    }
-                })
-               }} primary value="default">
+                    <Button name="Dispense button" onClick={() => {setHideModal(false)
+                    console.log(addedTable.length)}} 
+                    primary value="default">
                         Dispense
                     </Button>
                     </DataTableCell>
                 </DataTableRow>
                 </TableFoot>
             </DataTable>
-            <Modal hide={showModal} small>
+            }
+
+            <Modal hide={hideModal} small>
                 <ModalContent>
-                    Verification box
+                    <h3>Dispensing from {dispenser} to {recipient}</h3>
+                {addedTable.map((row, index) => {
+                        return (
+                            <DataTableRow key={index}>
+                                <DataTableCell >{getDisplayName(mergedData,row.commodity)}</DataTableCell>
+                                <DataTableCell key={counter++}>
+                                {row.amount}
+                                </DataTableCell>
+                                <DataTableCell key={counter++}> 
+
+                                </DataTableCell>
+                            </DataTableRow>
+                        )
+                    })}
                 </ModalContent>
                 <ModalActions>
                     <ButtonStrip end>
-                        <Button onClick={(e)=> {console.log("pressed cancel")
-                        setShowModal(true)}} destructive>
+                        <Button onClick={(e)=> {
+                        setHideModal(true)}} destructive>
                                 Cancel
                         </Button>
-                        <Button onClick={(e) => {console.log("pressed confirm")
-                        setShowModal(true)}} primary>
+                        <Button onClick={(e) => {
+                        let success = true
+                        console.log("this is the array I am sendiong: ", mutationArray)
+                        mutate({
+                            dispenseMutation: mutationArray,
+                        }).then(function (response) {
+                                if (response.response.status !== "SUCCESS") {
+                                    success = false
+                                    console.log(response);
+                                }
+                            })
+                        if(success) {
+                            clearState()
+                        }
+                        }} primary>
                             Confirm
                         </Button>
                     </ButtonStrip>
@@ -253,13 +313,21 @@ function distinguishName(data) {
     return find.name.split("Commodities ")[1]
   }
 function deleteRow(index, oldArray){
-    let newArray = oldArray.splice(index, 1)
+    let newArray = [...oldArray]
+    newArray = newArray.splice(index, 1)
     return newArray
 }
 
-function sendToDataStore(data) {
-   
+function getDisplayName(data, id){
+    let name = ""
+    data.map((element) => {
+        if(element.id == id){
+            name = String(element.displayName.split(" - ")[1])
+        }
+    })
+    return name
 }
+
 //Made this to get the period we want in a query
 function getPeriod(date){
     //console.log("Input date",date)
