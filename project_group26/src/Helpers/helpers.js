@@ -103,6 +103,25 @@ export function getCurrentDateTime() {
     return new Date().toISOString().substring(0, 16);
 }
 
+
+export function mergeData(data) {
+    return data.dataSets.dataSetElements.map(d=> {
+        const Mvalue = data.dataValueSets.dataValues.filter((dataValues)=> {
+        const dv = dataValues.categoryOptionCombo;
+      if (dv !== "HllvX50cXC0" && dv !== "KPP63zJPkOu"){
+        return dataValues.dataElement === d.dataElement.id;
+      }
+      return null;
+        });
+    return {
+      type: distinguishName(d.dataElement.dataElementGroups),
+      displayName: d.dataElement.name,
+      id: d.dataElement.id,
+      value: Mvalue,
+    };
+    });
+}
+
 export function mergeCategoriesData(data) {
     let categories = [];
     data.dataSets.dataSetElements.map((d) => {
@@ -257,4 +276,9 @@ export function filterTransactionsByDate(data, year, month) {
             }
         }
     });
+}
+
+function distinguishName(data) {
+    const find = data.find(data => data.id !== "Svac1cNQhRS")
+    return find.name.split("Commodities ")[1]
 }

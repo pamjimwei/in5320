@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useDataQuery, useDataMutation } from '@dhis2/app-runtime'
 import { CircularLoader } from '@dhis2/ui'
 import { InputField } from '@dhis2/ui'
+import { Loader, Alert } from "../Layout";
 import { Button, ButtonStrip} from '@dhis2-ui/button'
 import { DataTable, DataTableColumnHeader, DataTableRow, DataTableCell} from '@dhis2-ui/table'
 import { Modal, ModalContent, ModalActions} from '@dhis2-ui/modal'
 import { SingleSelectOption,  SingleSelect, SingleSelectField} from '@dhis2-ui/select'
+import { mergeData } from "../Helpers/helpers";
 import { postDispenseMutationQuery, DispenseCommodityDataQuery } from "../API/dispenseDataquery";
 import {
     TableBody,
@@ -13,24 +15,6 @@ import {
     TableFoot,
     TableHead,
 } from '@dhis2/ui'
-
-function mergeData(data) {
-    return data.dataSets.dataSetElements.map(d=> {
-        const Mvalue = data.dataValueSets.dataValues.filter((dataValues)=> {
-        const dv = dataValues.categoryOptionCombo;
-      if (dv !== "HllvX50cXC0" && dv !== "KPP63zJPkOu"){
-        return dataValues.dataElement === d.dataElement.id;
-      }
-      return null;
-        });
-    return {
-      type: distinguishName(d.dataElement.dataElementGroups),
-      displayName: d.dataElement.name,
-      id: d.dataElement.id,
-      value: Mvalue,
-    };
-    });
-}
 
 export default function Dispense(props) {
     const { loading, error, data } = 
@@ -88,16 +72,20 @@ export default function Dispense(props) {
         checkDisabledAdd()
        }, [addedTable, amount, commodity])
     if (error) {
-        return <span>ERROR: {error.message}</span>
+        return (
+            <Alert variant={"critical"} message={error.message} />
+        )
     }
 
     if (loading) {
-        return <CircularLoader large />
+        return (
+            <Loader />
+        )
     }
 
     if (data) {
 
-        let mergedData = mergeData(data)
+        let mergedData = mergeData(data, true);
         let counter = 0
         console.log(mergedData)
         return (
@@ -266,10 +254,6 @@ export default function Dispense(props) {
     }
 }
 
-function distinguishName(data) {
-    const find = data.find(data => data.id !== "Svac1cNQhRS")
-    return find.name.split("Commodities ")[1]
-  }
 function deleteRow(index, oldArray){
     let newArray = [...oldArray]
     newArray = newArray.splice(index, 1)
