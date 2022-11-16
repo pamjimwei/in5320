@@ -82,15 +82,22 @@ export function Dispense() {
     const [mutate, { mutateLoading, mutateError }] = useDataMutation(
         postDispenseMutationQuery()
     );
+    const [disabledInput, setDisabledInput] = useState(false)
+    const [disabledAdd, setDisabledAdd] = useState(true)
     const [mutationArray, setMutationArray] = useState([])
     const [hideModal, setHideModal] = useState(true)
     const [dispenser, setDispenser] = useState('')
     const [recipient, setRecipient] = useState('')
     const [commodity, setCommodity] = useState('')
+    const [commodityName, setCommodityName] = useState('')
     const [commodityID, setCommodityID] = useState('')    
     const [amount, setAmount] = useState()
     const [addedTable, setAddedTable] = useState([])
     
+    function clearCommodities(){
+        setCommodity('')
+        setAmount()
+    }
     function clearState(){
         setAddedTable([])
         setHideModal(true)
@@ -99,8 +106,29 @@ export function Dispense() {
         setAmount()
         setMutationArray([])
     }
-    //console.log("Recieved Data: ", data)
+    function checkDisabledDispenser(){
+        if(addedTable.length > 0){
+            setDisabledInput(true)
+        }
 
+        else{
+            setDisabledInput(false)
+        }
+    }
+    function checkDisabledAdd(){
+        if(dispenser =='' || recipient =='' || commodity =='' || amount == null || amount == undefined || ){
+            setDisabledAdd(true)
+        }
+        else{
+            setDisabledAdd(false)
+        }
+    }
+
+    //console.log("Recieved Data: ", data)
+    useEffect(() => {
+        checkDisabledDispenser()
+        checkDisabledAdd()
+       }, [addedTable, amount, commodity])
     if (error) {
         return <span>ERROR: {error.message}</span>
     }
@@ -113,11 +141,11 @@ export function Dispense() {
 
         let mergedData = mergeData(data)
         let counter = 0
-        //console.log(mergedData)
+        console.log(mergedData)
         return (
             <div>
                 <h3>Dispenser</h3>
-                <SingleSelectField type="text" filterable 
+                <SingleSelectField required disabled={disabledInput} initialFocus="true" inputWidth="300px" type="text" filterable 
                 selected={dispenser} key={counter++} 
                 value={dispenser} 
                 onChange={e => setDispenser(e.selected)} 
@@ -134,7 +162,7 @@ export function Dispense() {
                 )}
                 </SingleSelectField>
                 <h3>Recipient</h3>
-                <SingleSelectField type="text" filterable 
+                <SingleSelectField required  disabled={disabledInput} inputWidth="300px" type="text" filterable 
                 selected={recipient} key={counter++} 
                 value={recipient} 
                 onChange={e => setRecipient(e.selected)} 
@@ -151,8 +179,7 @@ export function Dispense() {
                 )}
             </SingleSelectField>
             <h3>Choose Commodity to Dispense</h3>
-            <div>
-            <SingleSelectField type="text" filterable 
+            <SingleSelectField  required  type="text" filterable 
                 selected={commodity} key={counter++} 
                 value={commodity} 
                 onChange={e => {setCommodity(e.selected)}} 
@@ -168,8 +195,8 @@ export function Dispense() {
                         }
                 )}
             </SingleSelectField>
-            <InputField type="number" value={amount} onChange={(e => setAmount(e.value) )} placeholder="Amount"/>
-            <Button onClick={(e) => {
+            <InputField required type="number" value={amount} onChange={(e => setAmount(e.value) )} placeholder="Amount"/>
+            <Button disabled={disabledAdd} onClick={(e) => {
                 console.log("pressed confirm")
                 setAddedTable(current => [...current, {
                     recipient: recipient,
@@ -185,28 +212,33 @@ export function Dispense() {
                     orgUnit: "uPshwz3B3Uu",
                     value: amount,
                 }])
-                console.log("mutationArray: ",mutationArray)  
+                clearCommodities()
             }} primary>
                 Add
             </Button>
-            </div>
+        {addedTable.length > 0 &&
             <DataTable>
                 <TableHead>
                     <DataTableRow>
                         <DataTableColumnHeader>Commodity</DataTableColumnHeader>
                         <DataTableColumnHeader>Amount</DataTableColumnHeader>
+                        <DataTableColumnHeader>Actions</DataTableColumnHeader>
                     </DataTableRow>
                 </TableHead>
                 <TableBody key={counter++}>
                     {addedTable.map((row, index) => {
                         return (
                             <DataTableRow key={index}>
-                                <DataTableCell >{row.commodity}</DataTableCell>
+                                <DataTableCell >{getDisplayName(mergedData,row.commodity)}</DataTableCell>
                                 <DataTableCell key={counter++}>
                                 {row.amount}
                                 </DataTableCell>
                                 <DataTableCell key={counter++}> 
-                                <Button onClick={() => console.log(index)} destructive>
+                                <Button name="delete_button" value={index} onClick={(e) => {
+                                    console.log(addedTable) 
+                                    let arr = [...addedTable]
+                                    arr.splice(index, 1)
+                                    setAddedTable(arr)}} destructive>
                                     Remove
                                 </Button>
                                 </DataTableCell>
@@ -217,7 +249,8 @@ export function Dispense() {
                 <TableFoot>
                 <DataTableRow>
                     <DataTableCell colSpan="4">
-                    <Button name="Dispense button" onClick={() => setHideModal(false)} 
+                    <Button name="Dispense button" onClick={() => {setHideModal(false)
+                    console.log(addedTable.length)}} 
                     primary value="default">
                         Dispense
                     </Button>
@@ -225,9 +258,24 @@ export function Dispense() {
                 </DataTableRow>
                 </TableFoot>
             </DataTable>
+            }
+
             <Modal hide={hideModal} small>
                 <ModalContent>
-                    Verification box
+                    <h3>Dispensing from {dispenser} to {recipient}</h3>
+                {addedTable.map((row, index) => {
+                        return (
+                            <DataTableRow key={index}>
+                                <DataTableCell >{getDisplayName(mergedData,row.commodity)}</DataTableCell>
+                                <DataTableCell key={counter++}>
+                                {row.amount}
+                                </DataTableCell>
+                                <DataTableCell key={counter++}> 
+
+                                </DataTableCell>
+                            </DataTableRow>
+                        )
+                    })}
                 </ModalContent>
                 <ModalActions>
                     <ButtonStrip end>
@@ -265,8 +313,19 @@ function distinguishName(data) {
     return find.name.split("Commodities ")[1]
   }
 function deleteRow(index, oldArray){
-    let newArray = oldArray.splice(index, 1)
+    let newArray = [...oldArray]
+    newArray = newArray.splice(index, 1)
     return newArray
+}
+
+function getDisplayName(data, id){
+    let name = ""
+    data.map((element) => {
+        if(element.id == id){
+            name = String(element.displayName.split(" - ")[1])
+        }
+    })
+    return name
 }
 
 //Made this to get the period we want in a query
