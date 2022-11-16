@@ -14,7 +14,6 @@ import {
 } from '@dhis2/ui'
 
 
-
 const dataQuery = {
     "dataSets": {
       "resource": "dataSets/ULowA8V3ucd",
@@ -79,19 +78,27 @@ function mergeData(data) {
 }
 
 export function Dispense() {
+    const { loading, error, data } = useDataQuery(dataQuery)
     const [mutate, { mutateLoading, mutateError }] = useDataMutation(
         postDispenseMutationQuery()
     );
     const [mutationArray, setMutationArray] = useState([])
-    const { loading, error, data } = useDataQuery(dataQuery)
-    const [showModal, setShowModal] = useState(true)
+    const [hideModal, setHideModal] = useState(true)
     const [dispenser, setDispenser] = useState('')
     const [recipient, setRecipient] = useState('')
     const [commodity, setCommodity] = useState('')
     const [commodityID, setCommodityID] = useState('')    
     const [amount, setAmount] = useState()
-    const [addeTable, setAddedTable] = useState([])
-
+    const [addedTable, setAddedTable] = useState([])
+    
+    function clearState(){
+        setAddedTable([])
+        setHideModal(true)
+        setRecipient('')
+        setCommodity('')
+        setAmount()
+        setMutationArray([])
+    }
     //console.log("Recieved Data: ", data)
 
     if (error) {
@@ -109,7 +116,7 @@ export function Dispense() {
         //console.log(mergedData)
         return (
             <div>
-                <h1>Please choose who is Dispensing</h1>
+                <h3>Dispenser</h3>
                 <SingleSelectField type="text" filterable 
                 selected={dispenser} key={counter++} 
                 value={dispenser} 
@@ -126,7 +133,7 @@ export function Dispense() {
                     }
                 )}
                 </SingleSelectField>
-                <h1>Please choose the recipient</h1>
+                <h3>Recipient</h3>
                 <SingleSelectField type="text" filterable 
                 selected={recipient} key={counter++} 
                 value={recipient} 
@@ -143,7 +150,7 @@ export function Dispense() {
                     }
                 )}
             </SingleSelectField>
-            <h1>Choose commodity here</h1>
+            <h3>Choose Commodity to Dispense</h3>
             <div>
             <SingleSelectField type="text" filterable 
                 selected={commodity} key={counter++} 
@@ -162,25 +169,26 @@ export function Dispense() {
                 )}
             </SingleSelectField>
             <InputField type="number" value={amount} onChange={(e => setAmount(e.value) )} placeholder="Amount"/>
-            <Button onClick={(e) => {console.log("pressed confirm")
-                        setAddedTable(current => [...current, {
-                            recipient: recipient,
-                            dispenser: dispenser,
-                            amount: amount,
-                            commodity: commodity,
-                            commodityID: commodityID
-                            }])
-                            setMutationArray([...mutationArray,{
-                                categoryOptionCombo: "J2Qf1jtZuj8",
-                                dataElement: commodity,
-                                period: "202110",
-                                orgUnit: "uPshwz3B3Uu",
-                                value: amount,
-                            }])
-                            console.log("mutationArray: ",mutationArray)  
-                        }} primary>
-                            Add
-                        </Button>
+            <Button onClick={(e) => {
+                console.log("pressed confirm")
+                setAddedTable(current => [...current, {
+                    recipient: recipient,
+                    dispenser: dispenser,
+                    amount: amount,
+                    commodity: commodity,
+                    commodityID: commodityID
+                    }])
+                setMutationArray([...mutationArray,{
+                    categoryOptionCombo: "J2Qf1jtZuj8",
+                    dataElement: commodity,
+                    period: "202110",
+                    orgUnit: "uPshwz3B3Uu",
+                    value: amount,
+                }])
+                console.log("mutationArray: ",mutationArray)  
+            }} primary>
+                Add
+            </Button>
             </div>
             <DataTable>
                 <TableHead>
@@ -190,7 +198,7 @@ export function Dispense() {
                     </DataTableRow>
                 </TableHead>
                 <TableBody key={counter++}>
-                    {addeTable.map((row, index) => {
+                    {addedTable.map((row, index) => {
                         return (
                             <DataTableRow key={index}>
                                 <DataTableCell >{row.commodity}</DataTableCell>
@@ -198,7 +206,7 @@ export function Dispense() {
                                 {row.amount}
                                 </DataTableCell>
                                 <DataTableCell key={counter++}> 
-                                <Button onClick={(e) => console.log(index)} destructive>
+                                <Button onClick={() => console.log(index)} destructive>
                                     Remove
                                 </Button>
                                 </DataTableCell>
@@ -209,35 +217,39 @@ export function Dispense() {
                 <TableFoot>
                 <DataTableRow>
                     <DataTableCell colSpan="4">
-                    <Button name="Dispense button" onClick={(e) => {console.log("mutationArray 2: ",mutationArray)
-               mutate({
-                dispenseMutation: mutationArray,
-            }).then(function (response) {
-                console.log("respones: ", response)
-                    if (response.response.status !== "SUCCESS") {
-
-                        console.log("this should not happen: ",response);
-                    }
-                })
-               }} primary value="default">
+                    <Button name="Dispense button" onClick={() => setHideModal(false)} 
+                    primary value="default">
                         Dispense
                     </Button>
                     </DataTableCell>
                 </DataTableRow>
                 </TableFoot>
             </DataTable>
-            <Modal hide={showModal} small>
+            <Modal hide={hideModal} small>
                 <ModalContent>
                     Verification box
                 </ModalContent>
                 <ModalActions>
                     <ButtonStrip end>
-                        <Button onClick={(e)=> {console.log("pressed cancel")
-                        setShowModal(true)}} destructive>
+                        <Button onClick={(e)=> {
+                        setHideModal(true)}} destructive>
                                 Cancel
                         </Button>
-                        <Button onClick={(e) => {console.log("pressed confirm")
-                        setShowModal(true)}} primary>
+                        <Button onClick={(e) => {
+                        let success = true
+                        console.log("this is the array I am sendiong: ", mutationArray)
+                        mutate({
+                            dispenseMutation: mutationArray,
+                        }).then(function (response) {
+                                if (response.response.status !== "SUCCESS") {
+                                    success = false
+                                    console.log(response);
+                                }
+                            })
+                        if(success) {
+                            clearState()
+                        }
+                        }} primary>
                             Confirm
                         </Button>
                     </ButtonStrip>
@@ -257,9 +269,6 @@ function deleteRow(index, oldArray){
     return newArray
 }
 
-function sendToDataStore(data) {
-   
-}
 //Made this to get the period we want in a query
 function getPeriod(date){
     //console.log("Input date",date)
