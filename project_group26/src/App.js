@@ -1,20 +1,42 @@
 import React from "react";
 import classes from "./App.module.css";
 import { useState } from "react";
-
-import { Overview } from "./Overview";
 import { Management } from "./Management";
-import { Dispense } from "./Dispense";
+import { OverviewPage } from "./Overview";
+import { DispensePage } from "./Dispense";
 import { Recount } from "./Recount";
-import { Navigation } from "./Navigation";
+import { Navigation, Alert, Loader } from "./Layout";
+import { useDataQuery } from "@dhis2/app-runtime";
+import { fetchMeDataQuery } from "./API/meDataQuery";
 
 
 function MyApp() {
-  const [activePage, setActivePage] = useState("Overview");
+  const { loading, error, data } = useDataQuery(fetchMeDataQuery());
+  const [activePage, setActivePage] = useState("OverviewPage");
 
   function activePageHandler(page) {
     setActivePage(page);
   }
+
+  if (error) {
+    return (
+      <Alert variant={"critical"} message={error.message} />
+    )
+  }
+  if (loading) {
+    return (
+      <Loader />
+    )
+  }
+
+  if (data) {
+    const me = {
+      currentPeriod: "202110",
+      orgUnit: "uPshwz3B3Uu",
+      name: data.me.name,
+      id: data.me.id,
+      organisationUnit: data.me.organisationUnits[0].id,
+    }
 
   return (
     <div className={classes.container}>
@@ -25,13 +47,14 @@ function MyApp() {
         />
       </div>
       <div className={classes.right}>
-        {activePage === "Overview" && <Overview />}
+        <OverviewPage activePage={activePage} me={me} />
         {activePage === "Management" && <Management />}
-        {activePage === "Dispense" && <Dispense />}
+        <DispensePage activePage={activePage} me={me} />
         {activePage === "Recount" && <Recount />}
       </div>
     </div>
   );
+  }
 }
 
 export default MyApp;

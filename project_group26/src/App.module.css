@@ -1,6 +1,7 @@
 .container {
     display: flex;
     min-height: 100vh;
+    
 }
 
 .left {
@@ -14,4 +15,14 @@
     min-height: 100vh;
     padding: 26px 16px 0;
     background: #f0f0f0;
+}
+
+.loader {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    inset: 0 0 0 0;
 }
