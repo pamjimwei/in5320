@@ -282,3 +282,20 @@ function distinguishName(data) {
     const find = data.find(data => data.id !== "Svac1cNQhRS")
     return find.name.split("Commodities ")[1]
 }
+
+export function getInventoryOfCommodity(data, id, co){
+    let maxValue = null
+    data.map(e => {
+        if(e.id ==id){
+            if (e.value[0].categoryOptionCombo == co){
+                maxValue = e.value[0].value
+            }
+            else if(e.value[1].categoryOptionCombo == co){
+                maxValue = e.value[1].value
+            }
+        }
+    })
+    console.log(maxValue)
+    return maxValue
+
+}

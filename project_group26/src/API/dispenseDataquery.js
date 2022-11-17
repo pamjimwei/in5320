@@ -32,6 +32,7 @@ export function DispenseCommodityDataQuery(orgUnit, period) {
     })
   }
 
+
 export function postDispenseMutationQuery() {
     return {
       resource: "dataValueSets",

@@ -7,7 +7,7 @@ import { Button, ButtonStrip} from '@dhis2-ui/button'
 import { DataTable, DataTableColumnHeader, DataTableRow, DataTableCell} from '@dhis2-ui/table'
 import { Modal, ModalContent, ModalActions} from '@dhis2-ui/modal'
 import { SingleSelectOption,  SingleSelect, SingleSelectField} from '@dhis2-ui/select'
-import { mergeData } from "../Helpers/helpers";
+import { mergeData, getInventoryOfCommodity } from "../Helpers/helpers";
 import { postDispenseMutationQuery, DispenseCommodityDataQuery } from "../API/dispenseDataquery";
 import {
     TableBody,
@@ -31,8 +31,8 @@ export default function Dispense(props) {
     const [dispenser, setDispenser] = useState('')
     const [recipient, setRecipient] = useState('')
     const [commodity, setCommodity] = useState('')
-    const [commodityName, setCommodityName] = useState('')
-    const [commodityID, setCommodityID] = useState('')    
+    const [maxValue, setMaxValue] = useState()
+
     const [amount, setAmount] = useState()
     const [addedTable, setAddedTable] = useState([])
     
@@ -48,6 +48,7 @@ export default function Dispense(props) {
         setAmount()
         setMutationArray([])
     }
+
     function checkDisabledDispenser(){
         if(addedTable.length > 0){
             setDisabledInput(true)
@@ -70,7 +71,7 @@ export default function Dispense(props) {
     useEffect(() => {
         checkDisabledDispenser()
         checkDisabledAdd()
-       }, [addedTable, amount, commodity])
+       }, [addedTable, amount, commodity, maxValue])
     if (error) {
         return (
             <Alert variant={"critical"} message={error.message} />
@@ -84,7 +85,6 @@ export default function Dispense(props) {
     }
 
     if (data) {
-
         let mergedData = mergeData(data, true);
         let counter = 0
         console.log(mergedData)
@@ -128,7 +128,8 @@ export default function Dispense(props) {
             <SingleSelectField  required  type="text" filterable 
                 selected={commodity} key={counter++} 
                 value={commodity} 
-                onChange={e => {setCommodity(e.selected)}} 
+                onChange={e => {setCommodity(e.selected)
+                setMaxValue(getInventoryOfCommodity(mergedData, commodity,"J2Qf1jtZuj8" ))}} 
                 placeholder="Select Commodity" 
                 className="Commodity"
                 noMatchText="No commodity by that name">
@@ -141,7 +142,14 @@ export default function Dispense(props) {
                         }
                 )}
             </SingleSelectField>
-            <InputField required type="number" value={amount} onChange={(e => setAmount(e.value) )} placeholder="Amount"/>
+            {commodity !='' &&
+            <div>
+            <InputField required type="number" min={1} max={Number(maxValue)} value={amount} onChange={(e) => {
+             setAmount(e.value)
+             console.log(maxValue)}} placeholder={String("Amount in stock: ",maxValue)}/>
+            <div> In stock: {maxValue}</div>
+            </div>
+            }
             <Button disabled={disabledAdd} onClick={(e) => {
                 console.log("pressed confirm")
                 setAddedTable(current => [...current, {
@@ -149,7 +157,7 @@ export default function Dispense(props) {
                     dispenser: dispenser,
                     amount: amount,
                     commodity: commodity,
-                    commodityID: commodityID
+                    commodityID: commodity
                     }])
                 setMutationArray([...mutationArray,{
                     categoryOptionCombo: "J2Qf1jtZuj8",
