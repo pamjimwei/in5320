@@ -23,7 +23,7 @@ export default function Navigation(props) {
       />
       <MenuItem
         label="Recount"
-        active={props.activePage == "Recount"}
+        active={props.activePage == "RecountPage"}
         onClick={() => props.activePageHandler("Recount")}
       />
     </Menu>

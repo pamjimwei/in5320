@@ -1,6 +1,9 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useDataQuery } from '@dhis2/app-runtime'
+import { Loader, Alert } from "../Layout";
 import { CircularLoader } from '@dhis2/ui'
+import { fetchStockDataQuery } from "../API/overviewDataquery";
+import { filterStockData, mergeStockData, getCategoriesFromStockData } from "../Helpers/helpers";
 
 import {
     Table,
@@ -51,7 +54,7 @@ function mergeData(data) {
     return mergedData
 }
 
-export function Recount() {
+export default function Recount(props) {
     const { loading, error, data } = useDataQuery(dataQuery)
     if (error) {
         return <span>ERROR: {error.message}</span>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Management } from "./Management";
 import { OverviewPage } from "./Overview";
 import { DispensePage } from "./Dispense";
-import { Recount } from "./Recount";
+import { RecountPage } from "./Recount";
 import { Navigation, Alert, Loader } from "./Layout";
 import { useDataQuery } from "@dhis2/app-runtime";
 import { fetchMeDataQuery } from "./API/meDataQuery";
@@ -50,7 +50,8 @@ function MyApp() {
         <OverviewPage activePage={activePage} me={me} />
         {activePage === "Management" && <Management />}
         <DispensePage activePage={activePage} me={me} />
-        {activePage === "Recount" && <Recount />}
+        <RecountPage activePage={activePage} me={me}/>
+        
       </div>
     </div>
   );
