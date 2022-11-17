@@ -7,6 +7,7 @@ import { fetchStockDataQuery } from "../API/overviewDataquery";
 import { postDispenseMutationQuery, DispenseCommodityDataQuery } from "../API/dispenseDataquery";
 import { filterStockData, mergeStockData, getCategoriesFromStockData, mergeData } from "../Helpers/helpers";
 import { InputField } from '@dhis2/ui'
+import { ReactFinalForm } from '@dhis2/ui'
 import {
     Table,
     TableBody,
@@ -21,7 +22,7 @@ import {
 export default function Recount(props) {
     const { loading, error, data } = 
     useDataQuery(DispenseCommodityDataQuery(props.me.orgUnit, props.me.currentPeriod));
-
+    const { Form, Field } = ReactFinalForm
     if (error) {
         return <span>ERROR: {error.message}</span>
     }
@@ -33,6 +34,7 @@ export default function Recount(props) {
     if (data) {
         let mergedData = mergeData(data, true);
         console.log(mergedData)
+
         return (
            <DataTable>
                 <TableHead>
@@ -61,6 +63,7 @@ export default function Recount(props) {
                     })}
                 </TableBody>
             </DataTable>
+            
         )
     }
 }
