@@ -2,9 +2,11 @@ import React, { useState } from 'react'
 import { useDataQuery } from '@dhis2/app-runtime'
 import { Loader, Alert } from "../Layout";
 import { CircularLoader } from '@dhis2/ui'
+import { DataTable, DataTableColumnHeader, DataTableRow, DataTableCell} from '@dhis2-ui/table'
 import { fetchStockDataQuery } from "../API/overviewDataquery";
-import { filterStockData, mergeStockData, getCategoriesFromStockData } from "../Helpers/helpers";
-
+import { postDispenseMutationQuery, DispenseCommodityDataQuery } from "../API/dispenseDataquery";
+import { filterStockData, mergeStockData, getCategoriesFromStockData, mergeData } from "../Helpers/helpers";
+import { InputField } from '@dhis2/ui'
 import {
     Table,
     TableBody,
@@ -16,46 +18,10 @@ import {
     TableRowHead,
 } from '@dhis2/ui'
 
-const dataQuery = {
-    dataSets: {
-        resource: 'dataSets/aLpVgfXiz0f',
-        params: {
-            fields: [
-                'name',
-                'id',
-                'dataSetElements[dataElement[id, displayName]',
-            ],
-        },
-    },
-    dataValueSets: {
-        resource: 'dataValueSets',
-        params: {
-            orgUnit: 'KiheEgvUZ0i',
-            dataSet: 'aLpVgfXiz0f',
-            period: '2020',
-        },
-    },
-}
-
-function mergeData(data) {
-    let mergedData = data.dataSets.dataSetElements.map(d => {
-        let matchedValue = data.dataValueSets.dataValues.find(dataValues => {
-            if (dataValues.dataElement == d.dataElement.id) {
-                return true
-            }
-        })
-
-        return {
-            displayName: d.dataElement.displayName,
-            id: d.dataElement.id,
-            value: matchedValue.value,
-        }
-    })
-    return mergedData
-}
-
 export default function Recount(props) {
-    const { loading, error, data } = useDataQuery(dataQuery)
+    const { loading, error, data } = 
+    useDataQuery(DispenseCommodityDataQuery(props.me.orgUnit, props.me.currentPeriod));
+
     if (error) {
         return <span>ERROR: {error.message}</span>
     }
@@ -65,29 +31,36 @@ export default function Recount(props) {
     }
 
     if (data) {
-        let mergedData = mergeData(data)
+        let mergedData = mergeData(data, true);
         console.log(mergedData)
         return (
-            <Table>
+           <DataTable>
                 <TableHead>
-                    <TableRowHead>
-                        <TableCellHead>Display Name</TableCellHead>
-                        <TableCellHead>Value</TableCellHead>
-                        <TableCellHead>ID</TableCellHead>
-                    </TableRowHead>
+                    <DataTableRow>
+                        <DataTableColumnHeader>Display Name</DataTableColumnHeader>
+                        <DataTableColumnHeader>Value</DataTableColumnHeader>
+                        <DataTableColumnHeader>Recounted Quantity</DataTableColumnHeader>
+                    </DataTableRow>
                 </TableHead>
                 <TableBody>
-                    {mergedData.map(row => {
+                    {mergedData.map((row, index) => {
                         return (
-                            <TableRow key={row.id}>
-                                <TableCell>{row.displayName}</TableCell>
-                                <TableCell>{row.value}</TableCell>
-                                <TableCell>{row.id}</TableCell>
-                            </TableRow>
+                            <DataTableRow key={index}>
+                                <DataTableCell>{row.displayName.split(" - ")[1]}</DataTableCell>
+                                <DataTableCell>{row.value[0].value}</DataTableCell>
+                                <DataTableCell>
+                                    <InputField 
+                                    name={row.id} 
+                                    type="number"
+                                    inputWidth="40px"
+                                    onChange={e => console.log(e.value)}>
+                                    </InputField>
+                                </DataTableCell>
+                            </DataTableRow>
                         )
                     })}
                 </TableBody>
-            </Table>
+            </DataTable>
         )
     }
 }
