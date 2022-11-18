@@ -5,7 +5,7 @@ import { CircularLoader, TextArea} from '@dhis2/ui'
 import { Modal, ModalContent, ModalActions} from '@dhis2-ui/modal'
 import { DataTable, DataTableColumnHeader, DataTableRow, DataTableCell} from '@dhis2-ui/table'
 import { fetchStockDataQuery } from "../API/overviewDataquery";
-import { postDispenseMutationQuery, DispenseCommodityDataQuery } from "../API/dispenseDataquery";
+import { postDispenseMutationQuery, DispenseCommodityDataQuery, fetchDispenseDataStoreMutationQuery } from "../API/dispenseDataquery";
 import { filterStockData, mergeStockData, getCategoriesFromStockData, mergeData } from "../Helpers/helpers";
 import { InputField } from '@dhis2/ui'
 import { ReactFinalForm } from '@dhis2/ui'
@@ -25,6 +25,9 @@ export default function Management(props) {
     const { loading, error, data, refetch} = 
     useDataQuery(DispenseCommodityDataQuery(props.me.orgUnit, props.me.currentPeriod));
 
+    const [dataStoreMutate, { mutateDSLoading, mutateDSError }] =
+        useDataMutation(fetchDispenseDataStoreMutationQuery());
+        
     const [mutate, { mutateLoading, mutateError }] = useDataMutation(
         postDispenseMutationQuery()
     );
@@ -108,7 +111,7 @@ export default function Management(props) {
                     <DataTableRow>
                         <DataTableColumnHeader>Display Name</DataTableColumnHeader>
                         <DataTableColumnHeader>Current Inventory</DataTableColumnHeader>
-                        <DataTableColumnHeader>Quantity to be ordered Quantity</DataTableColumnHeader>
+                        <DataTableColumnHeader>Quantity to be </DataTableColumnHeader>
                     </DataTableRow>
                 </TableHead>
                 <TableBody >
@@ -139,9 +142,7 @@ export default function Management(props) {
                     <Button name="recount"
                     disabled={disableButton} 
                     onClick={() => {
-                        console.log("this is formValues: ",formValues)
                         let filteredForm = Object.fromEntries(Object.entries(formValues).filter(([_, v]) => v != ""));
-                        console.log("this is filtered", filteredForm) 
                         let arr = createMutationArray(filteredForm)
                         setRecountMutation(arr)
                         console.log("my new array", arr)
@@ -175,6 +176,12 @@ export default function Management(props) {
                         </Button>
                         <Button onClick={()=> {
                         let success = true
+
+                            //Our setup that gathers a previous datastore results and appends them
+                            //does not work right now.
+                            let datastoreData = []
+                            datastoreData.push(data.DSManagement.transactions)
+                            datastoreData.push(formValues)
                         mutate({
                             dispenseMutation: recountMutation,
                         }).then(function (response) {
@@ -183,6 +190,18 @@ export default function Management(props) {
                                     console.log(response);
                                 }
                             })
+                        
+                        /*
+                        dataStoreMutate({
+                            transactions: datastoreData,
+                        })
+                            .then(function (response) {
+                                if (response.status !== "SUCCESS") {
+                                    console.log(response);
+                                    success = false;
+                                }
+                            })*/
+
                         if(success) {
                             refetch()
                             clearState()

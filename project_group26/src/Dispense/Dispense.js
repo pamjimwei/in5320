@@ -8,7 +8,7 @@ import { DataTable, DataTableColumnHeader, DataTableRow, DataTableCell} from '@d
 import { Modal, ModalContent, ModalActions} from '@dhis2-ui/modal'
 import { SingleSelectOption,  SingleSelect, SingleSelectField} from '@dhis2-ui/select'
 import { mergeData, getInventoryOfCommodity } from "../Helpers/helpers";
-import { postDispenseMutationQuery, DispenseCommodityDataQuery } from "../API/dispenseDataquery";
+import { postDispenseMutationQuery, DispenseCommodityDataQuery, fetchDispenseDataStoreMutationQuery} from "../API/dispenseDataquery";
 import {
     TableBody,
     TableCell,
@@ -20,6 +20,10 @@ export default function Dispense(props) {
     const { loading, error, data } = 
     useDataQuery(DispenseCommodityDataQuery(props.me.orgUnit, props.me.currentPeriod));
 
+
+    const [dataStoreMutate, { mutateDSLoading, mutateDSError }] =
+        useDataMutation(fetchDispenseDataStoreMutationQuery());
+        
     const [mutate, { mutateLoading, mutateError }] = useDataMutation(
         postDispenseMutationQuery()
     );
@@ -104,10 +108,11 @@ export default function Dispense(props) {
     if (data) {
         let mergedData = mergeData(data, true);
         let counter = 0
-        console.log(mergedData)
+        console.log(data)
+
         return (
             <div>
-                <h3>Dispenser</h3>
+                <h3>Dispensed by:</h3>
                 <SingleSelectField 
                 required 
                 disabled={disabledInput} 
@@ -128,7 +133,7 @@ export default function Dispense(props) {
                     }
                 )}
                 </SingleSelectField>
-                <h3>Recipient</h3>
+                <h3>Dispensed to:</h3>
                 <SingleSelectField required  disabled={disabledInput} inputWidth="300px" type="text" filterable 
                 selected={recipient} key={counter++} 
                 value={recipient} 
@@ -283,6 +288,12 @@ export default function Dispense(props) {
                         </Button>
                         <Button onClick={(e) => {
                         let success = true
+
+                        //Our setup that gathers a previous datastore results and appends them
+                        let datastoreData = []
+                        datastoreData.push(data.DSDispense.transactions)
+                        datastoreData.push(addedTable)
+
                         mutate({
                             dispenseMutation: endBalanceArray,
                         }).then(function (response) {
@@ -299,6 +310,19 @@ export default function Dispense(props) {
                                     console.log(response);
                                 }
                             })
+                            dataStoreMutate({
+                                transactions: datastoreData,
+                            })
+                                .then(function (response) {
+                                    if (response.status !== "SUCCESS") {
+                                        console.log(response);
+                                        success = false;
+                                    }
+                                })
+                                .catch(function (response) {
+                                    console.log(response);
+                                    success = false;
+                                });
                         if(success) {
                             clearState()
                         }

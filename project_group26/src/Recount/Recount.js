@@ -106,9 +106,9 @@ export default function Recount(props) {
             <DataTable>
                 <TableHead>
                     <DataTableRow>
-                        <DataTableColumnHeader>Display Name</DataTableColumnHeader>
-                        <DataTableColumnHeader>Value</DataTableColumnHeader>
-                        <DataTableColumnHeader>Recounted Quantity</DataTableColumnHeader>
+                        <DataTableColumnHeader>Commodity Name</DataTableColumnHeader>
+                        <DataTableColumnHeader>Current recorded Inventory</DataTableColumnHeader>
+                        <DataTableColumnHeader>Recounted Inventory</DataTableColumnHeader>
                     </DataTableRow>
                 </TableHead>
                 <TableBody >
@@ -183,8 +183,8 @@ export default function Recount(props) {
                                     console.log(response);
                                 }
                             })
-                        if(success) {
                             refetch()
+                        if(success) {
                             clearState()
                             setHideModal(true)
                         }
