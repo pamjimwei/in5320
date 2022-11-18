@@ -22,7 +22,9 @@ import {
 export default function Recount(props) {
     const { loading, error, data } = 
     useDataQuery(DispenseCommodityDataQuery(props.me.orgUnit, props.me.currentPeriod));
-    const { Form, Field } = ReactFinalForm
+
+    const [formValues, setFormValues] = useState({});
+
     if (error) {
         return <span>ERROR: {error.message}</span>
     }
@@ -45,17 +47,19 @@ export default function Recount(props) {
                     </DataTableRow>
                 </TableHead>
                 <TableBody>
-                    {mergedData.map((row, index) => {
+                    {mergedData.map((row) => {
+
                         return (
-                            <DataTableRow key={index}>
+                            <DataTableRow key={row.id}>
                                 <DataTableCell>{row.displayName.split(" - ")[1]}</DataTableCell>
                                 <DataTableCell>{row.value[0].value}</DataTableCell>
                                 <DataTableCell>
                                     <InputField 
-                                    name={row.id} 
+                                    name={row.id}
+                                    value={formValues[row.id]} 
                                     type="number"
                                     inputWidth="40px"
-                                    onChange={e => console.log(e.value)}>
+                                    onChange={e => setFormValues({...formValues, [row.id]: e.value})}>
                                     </InputField>
                                 </DataTableCell>
                             </DataTableRow>
