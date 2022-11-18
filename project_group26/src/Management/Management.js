@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { useDataQuery } from '@dhis2/app-runtime'
+import { useDataQuery, useDataMutation} from '@dhis2/app-runtime'
 import { Loader, Alert } from "../Layout";
-import { CircularLoader } from '@dhis2/ui'
+import { CircularLoader, TextArea} from '@dhis2/ui'
 import { Modal, ModalContent, ModalActions} from '@dhis2-ui/modal'
 import { DataTable, DataTableColumnHeader, DataTableRow, DataTableCell} from '@dhis2-ui/table'
 import { fetchStockDataQuery } from "../API/overviewDataquery";
@@ -22,18 +22,52 @@ import {
 } from '@dhis2/ui'
 
 export default function Management(props) {
-    const { loading, error, data } = 
+    const { loading, error, data, refetch} = 
     useDataQuery(DispenseCommodityDataQuery(props.me.orgUnit, props.me.currentPeriod));
+
+    const [mutate, { mutateLoading, mutateError }] = useDataMutation(
+        postDispenseMutationQuery()
+    );
 
     const [formValues, setFormValues] = useState({});
     const [hideModal, setHideModal] = useState(true)
     const [disableButton, setDisableButton] = useState(true)
+    const [disableConfirm, setDisableConfirm] = useState(true)
+    const [recountMutation, setRecountMutation] = useState([])
+    const [recountNotes, setRecountNotes] = useState("")
     function clearState(){
         setFormValues({})
         setDisableButton(true)
+        setRecountNotes("")
     }
-    
+    function createMutationArray(object){
+       let newArray = []
+        if(formValues != {}){
+            Object.keys(object).forEach(function(key){
+                newArray.push(
+                    {
+                    categoryOptionCombo: "KPP63zJPkOu",
+                    dataElement: key,
+                    period: "202110",
+                    orgUnit: "uPshwz3B3Uu",
+                    value: object[key]
+                    }
+            )   
+            });
+        console.log("newArray",newArray)
+        }
+        return newArray
+    }
+    function checkConfirmButton(){
+        if(recountNotes != ""){
+            setDisableConfirm(false)
+        }
+        else{
+            setDisableConfirm(true)
+        }
+    }
     function checkFormValuesValid(){
+        console.log("changed")
         let countTrue = 0
         if(formValues != {}){
             Object.keys(formValues).forEach(function(key){
@@ -52,8 +86,9 @@ export default function Management(props) {
         }
     }
     useEffect(() => {
-    checkFormValuesValid()
-        }, [formValues])
+        checkConfirmButton()
+        checkFormValuesValid()
+        }, [formValues, recountNotes])
 
     if (error) {
         return <span>ERROR: {error.message}</span>
@@ -67,13 +102,13 @@ export default function Management(props) {
         let mergedData = mergeData(data, true);
         return (
             <div>
-            <h2>Manage Store</h2>
+            <h2>Store Management</h2>
             <DataTable>
                 <TableHead>
                     <DataTableRow>
                         <DataTableColumnHeader>Display Name</DataTableColumnHeader>
                         <DataTableColumnHeader>Current Inventory</DataTableColumnHeader>
-                        <DataTableColumnHeader>Quantity to be Ordered</DataTableColumnHeader>
+                        <DataTableColumnHeader>Quantity to be ordered Quantity</DataTableColumnHeader>
                     </DataTableRow>
                 </TableHead>
                 <TableBody >
@@ -81,7 +116,7 @@ export default function Management(props) {
                         return (
                             <DataTableRow key={row.id}>
                                 <DataTableCell>{row.displayName.split(" - ")[1]}</DataTableCell>
-                                <DataTableCell>{row.value[0].value}</DataTableCell>
+                                <DataTableCell>{row.value[1].value}</DataTableCell>
                                 <DataTableCell>
                                     <InputField 
                                     min="0"
@@ -101,12 +136,15 @@ export default function Management(props) {
                 <DataTableRow>
                     <DataTableCell colSpan="4">
                     <ButtonStrip>
-                    <Button name="restock"
+                    <Button name="recount"
                     disabled={disableButton} 
                     onClick={() => {
-                        console.log(formValues)
+                        console.log("this is formValues: ",formValues)
                         let filteredForm = Object.fromEntries(Object.entries(formValues).filter(([_, v]) => v != ""));
                         console.log("this is filtered", filteredForm) 
+                        let arr = createMutationArray(filteredForm)
+                        setRecountMutation(arr)
+                        console.log("my new array", arr)
                         setHideModal(false)
                     }} 
                     primary value="default">
@@ -118,9 +156,16 @@ export default function Management(props) {
                 </DataTableRow>
                 </TableFoot>
             </DataTable> 
-            <Modal hide={hideModal} small>
+            <Modal hide={hideModal} medium>
                 <ModalContent>
-                    <h3>Please Confirm your order</h3>
+                    <h3>Are you sure you want to Restock?</h3>
+                <TextArea
+                    name="TransactionText"
+                    requiered
+                    value = {recountNotes}
+                    placeholder="Please write a note for the Recount"
+                    onChange={e => setRecountNotes(e.value)}
+                />
                 </ModalContent>
                 <ModalActions>
                     <ButtonStrip end>
@@ -129,9 +174,23 @@ export default function Management(props) {
                                 Cancel
                         </Button>
                         <Button onClick={()=> {
-                        setHideModal(true)
-                        clearState()
-                        }}primary>
+                        let success = true
+                        mutate({
+                            dispenseMutation: recountMutation,
+                        }).then(function (response) {
+                                if (response.response.status !== "SUCCESS") {
+                                    success = false
+                                    console.log(response);
+                                }
+                            })
+                        if(success) {
+                            refetch()
+                            clearState()
+                            setHideModal(true)
+                        }
+                        }}
+                        primary
+                        disabled={disableConfirm}>
                             Confirm
                         </Button>
                     </ButtonStrip>
