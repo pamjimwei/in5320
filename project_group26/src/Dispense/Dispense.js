@@ -2,10 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useDataQuery, useDataMutation } from '@dhis2/app-runtime'
 import { CircularLoader } from '@dhis2/ui'
 import { InputField } from '@dhis2/ui'
+import { Loader, Alert } from "../Layout";
 import { Button, ButtonStrip} from '@dhis2-ui/button'
 import { DataTable, DataTableColumnHeader, DataTableRow, DataTableCell} from '@dhis2-ui/table'
 import { Modal, ModalContent, ModalActions} from '@dhis2-ui/modal'
 import { SingleSelectOption,  SingleSelect, SingleSelectField} from '@dhis2-ui/select'
+import { mergeData, getInventoryOfCommodity } from "../Helpers/helpers";
+import { postDispenseMutationQuery, DispenseCommodityDataQuery } from "../API/dispenseDataquery";
 import {
     TableBody,
     TableCell,
@@ -13,75 +16,14 @@ import {
     TableHead,
 } from '@dhis2/ui'
 
+export default function Dispense(props) {
+    const { loading, error, data } = 
+    useDataQuery(DispenseCommodityDataQuery(props.me.orgUnit, props.me.currentPeriod));
 
-const dataQuery = {
-    "dataSets": {
-      "resource": "dataSets/ULowA8V3ucd",
-      "params": {
-        "fields": [
-          "name",
-          "id",
-          'dataSetElements[dataElement[name,id,dataElementGroups[name,id],categoryCombo[categoryOptionCombos[name,id]',
-          ],
-      },
-    },
-    "dataValueSets": {
-      "resource": "dataValueSets",
-      "params": {
-        "orgUnit": "uPshwz3B3Uu",
-        "dataSet": "ULowA8V3ucd",
-        "period": "202110",
-      },
-    },
-    "localUsers": {
-        "resource": "/users",
-        "params": {
-            "paging": "false",
-            "userOrgUnits": true
-        }
-    },
-    "allUsers": {
-        "resource": "/users",
-        "params": {
-            "paging": "false",
-        }
-    }      
-  };
-  function postDispenseMutationQuery() {
-    return {
-      resource: "dataValueSets",
-      type: "create",
-      dataSet: "ULowA8V3ucd",
-      data: ({ dispenseMutation }) => ({
-        dataValues: dispenseMutation,
-      }),
-    };
-  }
-
-//console.log("Data query: ",dataQuery)
-function mergeData(data) {
-    return data.dataSets.dataSetElements.map(d=> {
-        const Mvalue = data.dataValueSets.dataValues.filter((dataValues)=> {
-        const dv = dataValues.categoryOptionCombo;
-      if (dv !== "HllvX50cXC0" && dv !== "KPP63zJPkOu"){
-        return dataValues.dataElement === d.dataElement.id;
-      }
-      return null;
-        });
-    return {
-      type: distinguishName(d.dataElement.dataElementGroups),
-      displayName: d.dataElement.name,
-      id: d.dataElement.id,
-      value: Mvalue,
-    };
-    });
-}
-
-export function Dispense() {
-    const { loading, error, data } = useDataQuery(dataQuery)
     const [mutate, { mutateLoading, mutateError }] = useDataMutation(
         postDispenseMutationQuery()
     );
+    
     const [disabledInput, setDisabledInput] = useState(false)
     const [disabledAdd, setDisabledAdd] = useState(true)
     const [mutationArray, setMutationArray] = useState([])
@@ -89,8 +31,8 @@ export function Dispense() {
     const [dispenser, setDispenser] = useState('')
     const [recipient, setRecipient] = useState('')
     const [commodity, setCommodity] = useState('')
-    const [commodityName, setCommodityName] = useState('')
-    const [commodityID, setCommodityID] = useState('')    
+    const [maxValue, setMaxValue] = useState()
+
     const [amount, setAmount] = useState()
     const [addedTable, setAddedTable] = useState([])
     
@@ -106,6 +48,7 @@ export function Dispense() {
         setAmount()
         setMutationArray([])
     }
+
     function checkDisabledDispenser(){
         if(addedTable.length > 0){
             setDisabledInput(true)
@@ -116,7 +59,7 @@ export function Dispense() {
         }
     }
     function checkDisabledAdd(){
-        if(dispenser =='' || recipient =='' || commodity =='' || amount == null || amount == undefined || ){
+        if(dispenser =='' || recipient =='' || commodity =='' || amount == null || amount == undefined ){
             setDisabledAdd(true)
         }
         else{
@@ -128,18 +71,21 @@ export function Dispense() {
     useEffect(() => {
         checkDisabledDispenser()
         checkDisabledAdd()
-       }, [addedTable, amount, commodity])
+       }, [addedTable, amount, commodity, maxValue])
     if (error) {
-        return <span>ERROR: {error.message}</span>
+        return (
+            <Alert variant={"critical"} message={error.message} />
+        )
     }
 
     if (loading) {
-        return <CircularLoader large />
+        return (
+            <Loader />
+        )
     }
 
     if (data) {
-
-        let mergedData = mergeData(data)
+        let mergedData = mergeData(data, true);
         let counter = 0
         console.log(mergedData)
         return (
@@ -182,7 +128,8 @@ export function Dispense() {
             <SingleSelectField  required  type="text" filterable 
                 selected={commodity} key={counter++} 
                 value={commodity} 
-                onChange={e => {setCommodity(e.selected)}} 
+                onChange={e => {setCommodity(e.selected)
+                setMaxValue(getInventoryOfCommodity(mergedData, commodity,"J2Qf1jtZuj8" ))}} 
                 placeholder="Select Commodity" 
                 className="Commodity"
                 noMatchText="No commodity by that name">
@@ -195,7 +142,14 @@ export function Dispense() {
                         }
                 )}
             </SingleSelectField>
-            <InputField required type="number" value={amount} onChange={(e => setAmount(e.value) )} placeholder="Amount"/>
+            {commodity !='' &&
+            <div>
+            <InputField required type="number" min={1} max={Number(maxValue)} value={amount} onChange={(e) => {
+             setAmount(e.value)
+             console.log(maxValue)}} placeholder={String("Amount in stock: ",maxValue)}/>
+            <div> In stock: {maxValue}</div>
+            </div>
+            }
             <Button disabled={disabledAdd} onClick={(e) => {
                 console.log("pressed confirm")
                 setAddedTable(current => [...current, {
@@ -203,7 +157,7 @@ export function Dispense() {
                     dispenser: dispenser,
                     amount: amount,
                     commodity: commodity,
-                    commodityID: commodityID
+                    commodityID: commodity
                     }])
                 setMutationArray([...mutationArray,{
                     categoryOptionCombo: "J2Qf1jtZuj8",
@@ -308,10 +262,6 @@ export function Dispense() {
     }
 }
 
-function distinguishName(data) {
-    const find = data.find(data => data.id !== "Svac1cNQhRS")
-    return find.name.split("Commodities ")[1]
-  }
 function deleteRow(index, oldArray){
     let newArray = [...oldArray]
     newArray = newArray.splice(index, 1)

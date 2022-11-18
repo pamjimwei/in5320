@@ -1,13 +1,14 @@
 import React from "react";
-import { Menu, MenuItem } from "@dhis2/ui";
+import { Menu, MenuItem, IconHome16, IconExportItems24 } from "@dhis2/ui";
 
-export function Navigation(props) {
+export default function Navigation(props) {
   return (
     <Menu>
       <MenuItem
+        icon={<IconHome16 />}
         label="Overview"
-        active={props.activePage == "Overview"}
-        onClick={() => props.activePageHandler("Overview")}
+        active={props.activePage == "OverviewPage"}
+        onClick={() => props.activePageHandler("OverviewPage")}
       />
       <MenuItem
         label="Management"
@@ -15,13 +16,14 @@ export function Navigation(props) {
         onClick={() => props.activePageHandler("Management")}
       />
       <MenuItem
+        icon={<IconExportItems24 />}
         label="Dispense"
         active={props.activePage == "Dispense"}
         onClick={() => props.activePageHandler("Dispense")}
       />
       <MenuItem
         label="Recount"
-        active={props.activePage == "Recount"}
+        active={props.activePage == "RecountPage"}
         onClick={() => props.activePageHandler("Recount")}
       />
     </Menu>
