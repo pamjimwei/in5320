@@ -41,7 +41,7 @@ Allows users to view the stock balance of different commodities in the hospital 
 #### **Dispensing** ####
 Allows the user to assign different items in the inventory. The user must enter an item and amount, as well as dispenser and recipient names. All of these fields are required to successfully submit the form. Upon success, the solution commits the information to the data store for recording and updates the inventory in the overview.
 
-#### **Restock** ####
+#### **Recount** ####
 
 
 #### **Management** ####
