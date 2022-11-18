@@ -28,6 +28,15 @@ export function DispenseCommodityDataQuery(orgUnit, period) {
         params: {
             paging: "false",
         }
+    },
+    DSDispense: {
+        resource: "/dataStore/IN5320-G26/DispensingHistory"
+    },
+    DSRecount: {
+        resource: "/dataStore/IN5320-G26/RecountHistory"
+    },
+    DSDManagement: {
+        resource: "/dataStore/IN5320-G26/ManagementHistory"
     }
     })
   }
@@ -42,4 +51,17 @@ export function postDispenseMutationQuery() {
         dataValues: dispenseMutation,
       }),
     };
+  }
+
+  export function fetchDataStoreQuery() {
+    return ({
+      resource: "dataStore/IN5320-G26/DispensingHistory",
+    })
+  }
+   export function fetchDispenseDataStoreMutationQuery() {
+    return ({
+      resource: "dataStore/IN5320-G26/DispensingHistory",
+      type: "update",
+      data: (transactions) => transactions
+    })
   }

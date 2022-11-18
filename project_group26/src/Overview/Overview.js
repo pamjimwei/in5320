@@ -78,7 +78,7 @@ export default function Overview(props) {
                 "Commodity",
                 "Category",
                 "Consumption",
-                "Iventory",
+                "Inventory",
                 "Quantity to be ordered",
             ]}
             tableData={filteredData}

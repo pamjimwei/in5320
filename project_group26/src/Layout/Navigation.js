@@ -11,6 +11,7 @@ export default function Navigation(props) {
         onClick={() => props.activePageHandler("OverviewPage")}
       />
       <MenuItem
+        icon={<IconExportItems24 />}
         label="Management"
         active={props.activePage == "ManagementPage"}
         onClick={() => props.activePageHandler("Management")}
@@ -22,6 +23,7 @@ export default function Navigation(props) {
         onClick={() => props.activePageHandler("Dispense")}
       />
       <MenuItem
+        icon={<IconExportItems24 />}
         label="Recount"
         active={props.activePage == "RecountPage"}
         onClick={() => props.activePageHandler("Recount")}
