@@ -15,7 +15,11 @@ import {
     TableFoot,
     TableHead,
 } from '@dhis2/ui'
-
+/*Is a big component that handles the inputs and validation of data
+Handles dependent rendering of parts and bases this on the states.
+A user can dispense and update the dispensed quantity as an addition of already existing values,
+and subtracts from endbalance
+*/
 export default function Dispense(props) {
     const { loading, error, data } = 
     useDataQuery(DispenseCommodityDataQuery(props.me.orgUnit, props.me.currentPeriod));

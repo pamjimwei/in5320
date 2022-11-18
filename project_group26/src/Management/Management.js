@@ -20,7 +20,10 @@ import {
     TableRow,
     TableRowHead,
 } from '@dhis2/ui'
-
+/*
+Allows a user to input their desired stock quantity to be ordered  of all commodities.
+Handles validation on a useEffect level and through states. 
+*/
 export default function Management(props) {
     const { loading, error, data, refetch} = 
     useDataQuery(DispenseCommodityDataQuery(props.me.orgUnit, props.me.currentPeriod));
