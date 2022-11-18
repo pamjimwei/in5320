@@ -148,7 +148,7 @@ export default function Management(props) {
                         setHideModal(false)
                     }} 
                     primary value="default">
-                        Submit Stock Recount
+                        Submit Order
                     </Button>
                     <Button name="clear" onClick={clearState} >Clear Input</Button>
                     </ButtonStrip>
@@ -158,12 +158,12 @@ export default function Management(props) {
             </DataTable> 
             <Modal hide={hideModal} medium>
                 <ModalContent>
-                    <h3>Are you sure you want to Restock?</h3>
+                    <h3>Are you sure about your Order?</h3>
                 <TextArea
                     name="TransactionText"
                     requiered
                     value = {recountNotes}
-                    placeholder="Please write a note for the Recount"
+                    placeholder="Please write a note for the Order"
                     onChange={e => setRecountNotes(e.value)}
                 />
                 </ModalContent>
