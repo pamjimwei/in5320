@@ -1,6 +1,9 @@
 # in5320-group-26
+# Commodity Dispensing
 
-Prerequisites
+This project was bootstrapped with [DHIS2 Application Platform](https://github.com/dhis2/app-platform).
+
+## **Prerequsites**
 
 _DHIS2 CLI installed_
 
