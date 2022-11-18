@@ -1,7 +1,7 @@
 import React from "react";
 import classes from "./App.module.css";
 import { useState } from "react";
-import { Management } from "./Management";
+import { ManagementPage } from "./Management";
 import { OverviewPage } from "./Overview";
 import { DispensePage } from "./Dispense";
 import { RecountPage } from "./Recount";
@@ -48,7 +48,7 @@ function MyApp() {
       </div>
       <div className={classes.right}>
         <OverviewPage activePage={activePage} me={me} />
-        {activePage === "Management" && <Management />}
+        <ManagementPage activePage={activePage} me={me}/>
         <DispensePage activePage={activePage} me={me} />
         <RecountPage activePage={activePage} me={me}/>
         
