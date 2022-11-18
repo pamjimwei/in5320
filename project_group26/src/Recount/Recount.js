@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useDataQuery, useDataMutation} from '@dhis2/app-runtime'
 import { Loader, Alert } from "../Layout";
-import { CircularLoader } from '@dhis2/ui'
+import { CircularLoader, TextArea} from '@dhis2/ui'
 import { Modal, ModalContent, ModalActions} from '@dhis2-ui/modal'
 import { DataTable, DataTableColumnHeader, DataTableRow, DataTableCell} from '@dhis2-ui/table'
 import { fetchStockDataQuery } from "../API/overviewDataquery";
@@ -22,7 +22,7 @@ import {
 } from '@dhis2/ui'
 
 export default function Recount(props) {
-    const { loading, error, data } = 
+    const { loading, error, data, refetch} = 
     useDataQuery(DispenseCommodityDataQuery(props.me.orgUnit, props.me.currentPeriod));
 
     const [mutate, { mutateLoading, mutateError }] = useDataMutation(
@@ -32,7 +32,9 @@ export default function Recount(props) {
     const [formValues, setFormValues] = useState({});
     const [hideModal, setHideModal] = useState(true)
     const [disableButton, setDisableButton] = useState(true)
+    const [disableConfirm, setDisableConfirm] = useState(true)
     const [recountMutation, setRecountMutation] = useState([])
+    const [recountNotes, setRecountNotes] = useState("")
     function clearState(){
         setFormValues({})
         setDisableButton(true)
@@ -44,7 +46,7 @@ export default function Recount(props) {
                 newArray.push(
                     {
                     categoryOptionCombo: "rQLFnNXXIL0",
-                    dataElement: object,
+                    dataElement: key,
                     period: "202110",
                     orgUnit: "uPshwz3B3Uu",
                     value: object[key]
@@ -53,7 +55,15 @@ export default function Recount(props) {
             });
         console.log("newArray",newArray)
         }
-    setRecountMutation(newArray)
+        return newArray
+    }
+    function checkConfirmButton(){
+        if(recountNotes != ""){
+            setDisableConfirm(false)
+        }
+        else{
+            setDisableConfirm(true)
+        }
     }
     function checkFormValuesValid(){
         console.log("changed")
@@ -75,8 +85,9 @@ export default function Recount(props) {
         }
     }
     useEffect(() => {
-    checkFormValuesValid()
-        }, [formValues])
+        checkConfirmButton()
+        checkFormValuesValid()
+        }, [formValues, recountNotes])
 
     if (error) {
         return <span>ERROR: {error.message}</span>
@@ -104,7 +115,7 @@ export default function Recount(props) {
                         return (
                             <DataTableRow key={row.id}>
                                 <DataTableCell>{row.displayName.split(" - ")[1]}</DataTableCell>
-                                <DataTableCell>{row.value[0].value}</DataTableCell>
+                                <DataTableCell>{row.value[1].value}</DataTableCell>
                                 <DataTableCell>
                                     <InputField 
                                     min="0"
@@ -131,6 +142,7 @@ export default function Recount(props) {
                         let filteredForm = Object.fromEntries(Object.entries(formValues).filter(([_, v]) => v != ""));
                         console.log("this is filtered", filteredForm) 
                         let arr = createMutationArray(filteredForm)
+                        setRecountMutation(arr)
                         console.log("my new array", arr)
                         setHideModal(false)
                     }} 
@@ -143,9 +155,16 @@ export default function Recount(props) {
                 </DataTableRow>
                 </TableFoot>
             </DataTable> 
-            <Modal hide={hideModal} small>
+            <Modal hide={hideModal} medium>
                 <ModalContent>
                     <h3>Are you sure you want to Restock?</h3>
+                <TextArea
+                    name="TransactionText"
+                    requiered
+                    value = {recountNotes}
+                    placeholder="Please write a note for the Recount"
+                    onChange={e => setRecountNotes(e.value)}
+                />
                 </ModalContent>
                 <ModalActions>
                     <ButtonStrip end>
@@ -164,10 +183,13 @@ export default function Recount(props) {
                                 }
                             })
                         if(success) {
+                            refetch()
                             clearState()
                             setHideModal(true)
                         }
-                        }}primary>
+                        }}
+                        primary
+                        disabled={disableConfirm}>
                             Confirm
                         </Button>
                     </ButtonStrip>
