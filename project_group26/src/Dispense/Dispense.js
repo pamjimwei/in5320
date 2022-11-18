@@ -173,11 +173,10 @@ export default function Dispense(props) {
             <div>
             <InputField  inputWidth="300px"required type="number" min={0}  value={amount} onChange={(e) => {
              setAmount(e.value)
-             console.log(maxValue)}} placeholder={"Amount to Dispense"}/>
+             }} placeholder={"Amount to Dispense"}/>
             </div>
             }
             <Button disabled={disabledAdd} onClick={(e) => {
-                console.log("pressed confirm")
                 setAddedTable(current => [...current, {
                     recipient: recipient,
                     dispenser: dispenser,
@@ -192,8 +191,6 @@ export default function Dispense(props) {
                 let oldValueEndBalance = getValueOfCo(mergedData, "rQLFnNXXIL0", commodity)
                 let newValueEndBalance  = parseInt(oldValueEndBalance)-parseInt(amount)
 
-                console.log("End balance",oldValueEndBalance)
-                console.log("End balance",newValueEndBalance)
 
 
                 setConsumptionArray([...consumptionArray,{
@@ -236,7 +233,6 @@ export default function Dispense(props) {
                                 </DataTableCell>
                                 <DataTableCell key={counter++}> 
                                 <Button name="delete_button" value={index} onClick={(e) => {
-                                    console.log(addedTable) 
                                     let arr = [...addedTable]
                                     arr.splice(index, 1)
                                     setAddedTable(arr)}} destructive>
@@ -251,9 +247,7 @@ export default function Dispense(props) {
                 <DataTableRow>
                     <DataTableCell colSpan="4">
                     <Button name="Dispense button" onClick={() => {
-                        setHideModal(false)
-                        console.log("right formatted array: ",consumptionArray)
-                        console.log(addedTable.length)}} 
+                        setHideModal(false)}} 
                         primary value="default">
                         Dispense
                     </Button>
@@ -351,11 +345,4 @@ function getDisplayName(data, id){
         }
     })
     return name
-}
-
-//Made this to get the period we want in a query
-function getPeriod(date){
-    //console.log("Input date",date)
-    //console.log("Modified date",date.split('-').join('').slice(0, -2))
-    return date.split('-').join('').slice(0, -2)
 }

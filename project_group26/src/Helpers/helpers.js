@@ -191,7 +191,6 @@ export function mergeDataStoreData(existingData, newTransaction, commodityData) 
             }
         });
         commodity.increasedStock = (parseInt(commodity.value) > 0)
-        console.log("Increased stock", commodity.value, commodity.increasedStock)
     });
 
     existingData.transactions.unshift(newTransaction);
@@ -295,7 +294,6 @@ export function getInventoryOfCommodity(data, id, co){
             }
         }
     })
-    console.log(maxValue)
     return maxValue
 
 }

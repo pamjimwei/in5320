@@ -54,7 +54,6 @@ export default function Recount(props) {
                     }
             )   
             });
-        console.log("newArray",newArray)
         }
         return newArray
     }
@@ -67,17 +66,14 @@ export default function Recount(props) {
         }
     }
     function checkFormValuesValid(){
-        console.log("changed")
         let countTrue = 0
         if(formValues != {}){
             Object.keys(formValues).forEach(function(key){
                 if(formValues[key] != ''){
-                    console.log("valid key,", formValues[key])
                     countTrue += 1
                 }
             });
         }
-        console.log(countTrue)
         if(countTrue > 0){
             setDisableButton(false)
         }
@@ -139,12 +135,9 @@ export default function Recount(props) {
                     <Button name="recount"
                     disabled={disableButton} 
                     onClick={() => {
-                        console.log("this is formValues: ",formValues)
                         let filteredForm = Object.fromEntries(Object.entries(formValues).filter(([_, v]) => v != ""));
-                        console.log("this is filtered", filteredForm) 
                         let arr = createMutationArray(filteredForm)
                         setRecountMutation(arr)
-                        console.log("my new array", arr)
                         setHideModal(false)
                     }} 
                     primary value="default">

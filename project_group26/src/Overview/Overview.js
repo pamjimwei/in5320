@@ -68,6 +68,7 @@ export default function Overview(props) {
             min="2021-01" 
             max="2021-12" 
             label="Period" 
+            inputWidth="150px"
             value={period} 
             type="month" 
             name="Period" 

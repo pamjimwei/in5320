@@ -57,7 +57,6 @@ export default function Management(props) {
                     }
             )   
             });
-        console.log("newArray",newArray)
         }
         return newArray
     }
@@ -70,17 +69,14 @@ export default function Management(props) {
         }
     }
     function checkFormValuesValid(){
-        console.log("changed")
         let countTrue = 0
         if(formValues != {}){
             Object.keys(formValues).forEach(function(key){
                 if(formValues[key] != ''){
-                    console.log("valid key,", formValues[key])
                     countTrue += 1
                 }
             });
         }
-        console.log(countTrue)
         if(countTrue > 0){
             setDisableButton(false)
         }
@@ -145,7 +141,7 @@ export default function Management(props) {
                         let filteredForm = Object.fromEntries(Object.entries(formValues).filter(([_, v]) => v != ""));
                         let arr = createMutationArray(filteredForm)
                         setRecountMutation(arr)
-                        console.log("my new array", arr)
+
                         setHideModal(false)
                     }} 
                     primary value="default">
@@ -179,9 +175,9 @@ export default function Management(props) {
 
                             //Our setup that gathers a previous datastore results and appends them
                             //does not work right now.
-                            let datastoreData = []
-                            datastoreData.push(data.DSManagement.transactions)
-                            datastoreData.push(formValues)
+                            //let datastoreData = []
+                            //datastoreData.push(data.DSManagement.transactions)
+                            //datastoreData.push(formValues)
                         mutate({
                             dispenseMutation: recountMutation,
                         }).then(function (response) {
@@ -190,20 +186,8 @@ export default function Management(props) {
                                     console.log(response);
                                 }
                             })
-                        
-                        /*
-                        dataStoreMutate({
-                            transactions: datastoreData,
-                        })
-                            .then(function (response) {
-                                if (response.status !== "SUCCESS") {
-                                    console.log(response);
-                                    success = false;
-                                }
-                            })*/
-
-                        if(success) {
                             refetch()
+                        if(success) {
                             clearState()
                             setHideModal(true)
                         }
