@@ -12,13 +12,13 @@ export default function Navigation(props) {
       />
       <MenuItem
         label="Management"
-        active={props.activePage == "Management"}
+        active={props.activePage == "ManagementPage"}
         onClick={() => props.activePageHandler("Management")}
       />
       <MenuItem
         icon={<IconExportItems24 />}
         label="Dispense"
-        active={props.activePage == "Dispense"}
+        active={props.activePage == "DispensePage"}
         onClick={() => props.activePageHandler("Dispense")}
       />
       <MenuItem
