@@ -20,7 +20,10 @@ import {
     TableRow,
     TableRowHead,
 } from '@dhis2/ui'
-
+/*
+Allows a user to input their desired stock recounts of all commodities.
+Handles validation on a useEffect level and through states.
+*/
 export default function Recount(props) {
     const { loading, error, data, refetch} = 
     useDataQuery(DispenseCommodityDataQuery(props.me.orgUnit, props.me.currentPeriod));
@@ -40,6 +43,7 @@ export default function Recount(props) {
         setDisableButton(true)
         setRecountNotes("")
     }
+    //prepears the array 
     function createMutationArray(object){
        let newArray = []
         if(formValues != {}){
