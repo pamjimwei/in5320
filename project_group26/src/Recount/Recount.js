@@ -38,6 +38,7 @@ export default function Recount(props) {
     function clearState(){
         setFormValues({})
         setDisableButton(true)
+        setRecountNotes("")
     }
     function createMutationArray(object){
        let newArray = []
