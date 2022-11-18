@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useDataQuery } from '@dhis2/app-runtime'
+import { useDataQuery, useDataMutation} from '@dhis2/app-runtime'
 import { Loader, Alert } from "../Layout";
 import { CircularLoader } from '@dhis2/ui'
 import { Modal, ModalContent, ModalActions} from '@dhis2-ui/modal'
@@ -25,14 +25,36 @@ export default function Recount(props) {
     const { loading, error, data } = 
     useDataQuery(DispenseCommodityDataQuery(props.me.orgUnit, props.me.currentPeriod));
 
+    const [mutate, { mutateLoading, mutateError }] = useDataMutation(
+        postDispenseMutationQuery()
+    );
+
     const [formValues, setFormValues] = useState({});
     const [hideModal, setHideModal] = useState(true)
     const [disableButton, setDisableButton] = useState(true)
+    const [recountMutation, setRecountMutation] = useState([])
     function clearState(){
         setFormValues({})
         setDisableButton(true)
     }
-    
+    function createMutationArray(object){
+       let newArray = []
+        if(formValues != {}){
+            Object.keys(object).forEach(function(key){
+                newArray.push(
+                    {
+                    categoryOptionCombo: "rQLFnNXXIL0",
+                    dataElement: object,
+                    period: "202110",
+                    orgUnit: "uPshwz3B3Uu",
+                    value: object[key]
+                    }
+            )   
+            });
+        console.log("newArray",newArray)
+        }
+    setRecountMutation(newArray)
+    }
     function checkFormValuesValid(){
         console.log("changed")
         let countTrue = 0
@@ -102,12 +124,14 @@ export default function Recount(props) {
                 <DataTableRow>
                     <DataTableCell colSpan="4">
                     <ButtonStrip>
-                    <Button name="restock"
+                    <Button name="recount"
                     disabled={disableButton} 
                     onClick={() => {
-                        console.log(formValues)
+                        console.log("this is formValues: ",formValues)
                         let filteredForm = Object.fromEntries(Object.entries(formValues).filter(([_, v]) => v != ""));
                         console.log("this is filtered", filteredForm) 
+                        let arr = createMutationArray(filteredForm)
+                        console.log("my new array", arr)
                         setHideModal(false)
                     }} 
                     primary value="default">
@@ -130,8 +154,19 @@ export default function Recount(props) {
                                 Cancel
                         </Button>
                         <Button onClick={()=> {
-                        setHideModal(true)
-                        clearState()
+                        let success = true
+                        mutate({
+                            dispenseMutation: recountMutation,
+                        }).then(function (response) {
+                                if (response.response.status !== "SUCCESS") {
+                                    success = false
+                                    console.log(response);
+                                }
+                            })
+                        if(success) {
+                            clearState()
+                            setHideModal(true)
+                        }
                         }}primary>
                             Confirm
                         </Button>

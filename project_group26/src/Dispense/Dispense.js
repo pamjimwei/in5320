@@ -199,6 +199,7 @@ export default function Dispense(props) {
                     value: newValueConsumption
                 }])
 
+
                 setEndBalanceArray([...consumptionArray,{
                     categoryOptionCombo: "rQLFnNXXIL0",
                     dataElement: commodity,
@@ -244,9 +245,11 @@ export default function Dispense(props) {
                 <TableFoot>
                 <DataTableRow>
                     <DataTableCell colSpan="4">
-                    <Button name="Dispense button" onClick={() => {setHideModal(false)
-                    console.log(addedTable.length)}} 
-                    primary value="default">
+                    <Button name="Dispense button" onClick={() => {
+                        setHideModal(false)
+                        console.log("right formatted array: ",consumptionArray)
+                        console.log(addedTable.length)}} 
+                        primary value="default">
                         Dispense
                     </Button>
                     </DataTableCell>
