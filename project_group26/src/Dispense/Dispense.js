@@ -26,7 +26,8 @@ export default function Dispense(props) {
     
     const [disabledInput, setDisabledInput] = useState(false)
     const [disabledAdd, setDisabledAdd] = useState(true)
-    const [mutationArray, setMutationArray] = useState([])
+    const [consumptionArray, setConsumptionArray] = useState([])
+    const [endBalanceArray, setEndBalanceArray] = useState([])
     const [hideModal, setHideModal] = useState(true)
     const [dispenser, setDispenser] = useState('')
     const [recipient, setRecipient] = useState('')
@@ -36,6 +37,21 @@ export default function Dispense(props) {
     const [amount, setAmount] = useState()
     const [addedTable, setAddedTable] = useState([])
     
+    function getValueOfCo(data, co, id){
+        let oldValue = 0
+        data.map((e) => {
+            if(e.id == id){
+                if(e.value[0].categoryOptionCombo == co){
+                    oldValue = e.value[0].value
+                }
+                if(e.value[1].categoryOptionCombo == co){
+                    oldValue = e.value[1].value
+                }
+            }
+        })
+        console.log(oldValue)
+        return oldValue
+    }
     function clearCommodities(){
         setCommodity('')
         setAmount()
@@ -46,7 +62,8 @@ export default function Dispense(props) {
         setRecipient('')
         setCommodity('')
         setAmount()
-        setMutationArray([])
+        setConsumptionArray([])
+        setEndBalanceArray([])
     }
 
     function checkDisabledDispenser(){
@@ -91,7 +108,11 @@ export default function Dispense(props) {
         return (
             <div>
                 <h3>Dispenser</h3>
-                <SingleSelectField required disabled={disabledInput} initialFocus="true" inputWidth="300px" type="text" filterable 
+                <SingleSelectField 
+                required 
+                disabled={disabledInput} 
+                initialFocus={true} 
+                inputWidth="300px" type="text" filterable 
                 selected={dispenser} key={counter++} 
                 value={dispenser} 
                 onChange={e => setDispenser(e.selected)} 
@@ -126,6 +147,7 @@ export default function Dispense(props) {
             </SingleSelectField>
             <h3>Choose Commodity to Dispense</h3>
             <SingleSelectField  required  type="text" filterable 
+                inputWidth="300px"
                 selected={commodity} key={counter++} 
                 value={commodity} 
                 onChange={e => {setCommodity(e.selected)
@@ -144,10 +166,9 @@ export default function Dispense(props) {
             </SingleSelectField>
             {commodity !='' &&
             <div>
-            <InputField required type="number" min={1} max={Number(maxValue)} value={amount} onChange={(e) => {
+            <InputField  inputWidth="300px"required type="number" min={0}  value={amount} onChange={(e) => {
              setAmount(e.value)
-             console.log(maxValue)}} placeholder={String("Amount in stock: ",maxValue)}/>
-            <div> In stock: {maxValue}</div>
+             console.log(maxValue)}} placeholder={"Amount to Dispense"}/>
             </div>
             }
             <Button disabled={disabledAdd} onClick={(e) => {
@@ -159,13 +180,33 @@ export default function Dispense(props) {
                     commodity: commodity,
                     commodityID: commodity
                     }])
-                setMutationArray([...mutationArray,{
+
+                let oldValueConsumption = getValueOfCo(mergedData, "J2Qf1jtZuj8", commodity)
+                let newValueConsumption = parseInt(oldValueConsumption)+ parseInt(amount)
+
+                let oldValueEndBalance = getValueOfCo(mergedData, "rQLFnNXXIL0", commodity)
+                let newValueEndBalance  = parseInt(oldValueEndBalance)-parseInt(amount)
+
+                console.log("End balance",oldValueEndBalance)
+                console.log("End balance",newValueEndBalance)
+
+
+                setConsumptionArray([...consumptionArray,{
                     categoryOptionCombo: "J2Qf1jtZuj8",
                     dataElement: commodity,
                     period: "202110",
                     orgUnit: "uPshwz3B3Uu",
-                    value: amount,
+                    value: newValueConsumption
                 }])
+
+                setEndBalanceArray([...consumptionArray,{
+                    categoryOptionCombo: "rQLFnNXXIL0",
+                    dataElement: commodity,
+                    period: "202110",
+                    orgUnit: "uPshwz3B3Uu",
+                    value: newValueEndBalance
+                }])
+
                 clearCommodities()
             }} primary>
                 Add
@@ -239,9 +280,16 @@ export default function Dispense(props) {
                         </Button>
                         <Button onClick={(e) => {
                         let success = true
-                        console.log("this is the array I am sendiong: ", mutationArray)
                         mutate({
-                            dispenseMutation: mutationArray,
+                            dispenseMutation: endBalanceArray,
+                        }).then(function (response) {
+                                if (response.response.status !== "SUCCESS") {
+                                    success = false
+                                    console.log(response);
+                                }
+                            })
+                        mutate({
+                            dispenseMutation: consumptionArray,
                         }).then(function (response) {
                                 if (response.response.status !== "SUCCESS") {
                                     success = false
